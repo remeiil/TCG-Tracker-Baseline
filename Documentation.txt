@@ -1,0 +1,47 @@
+Example HTTP Payloads
+Creating a Set (POST http://localhost:3000/sets)
+JSON
+{
+    "name": "Base Set",
+    "era": "Original",
+    "total": 102,
+    "complete_total": 102,
+    "release_date": "1999-01-09"
+}
+Inserting a Card (POST http://localhost:3000/cards)
+JSON
+POST http://localhost:3000/cards
+Content-Type: application/json
+
+{
+    "set_id": 1,
+    "name": "Charizard",
+    "set_number": "4/102",
+    "rarity": "Rare Holo",
+    "supertype": "Pokémon",
+    "subtypes": "Stage 2",
+    "type_1": "Fire",
+    "hp": 120,
+    "evolves_from": "Charmeleon",
+    "weakness_type": "Water",
+    "weakness_value": "x2",
+    "resistance_type": "Fighting",
+    "resistance_value": "-30",
+    "retreat_cost": 3,
+    "abilities": [
+        {
+            "name": "Energy Burn",
+            "type": "Poké-Power",
+            "description": "As often as you like during your turn, you may turn all Energy attached to Charizard into Fire Energy."
+        }
+    ],
+    "attacks": [
+        {
+            "name": "Fire Spin",
+            "cost": "Fire,Fire,Colorless,Colorless",
+            "converted_energy_cost": 4,
+            "damage": "100",
+            "description": "Discard 2 Energy cards attached to Charizard in order to use this attack."
+        }
+    ]
+}

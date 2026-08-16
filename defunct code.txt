@@ -1,0 +1,203 @@
+<div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row m-auto" style="max-width: 1200px">
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row m-auto" style="max-width: 1200px">
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+        <div class="p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white">
+            <img class="br05" src="./quilava_dr_033_182.png" width="100%">
+            <div class="justify-between">
+                <div>
+                    <h4>Ethan's Quilava</h4>
+                    <p>Destined Rivals</p>
+                    <p>033/182</p>
+                    <p class="font-medium-jungle bold">$0.46</p>
+                </div>
+            </div>
+        </div>
+    </div>
