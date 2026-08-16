@@ -49,43 +49,35 @@ app.get('/cards', (req, res) => {
     const { name, set_id, rarity, type } = req.query;
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     let limit = parseInt(req.query.limit, 10) || 20;
-    if (limit > 100) limit = 100; // Cap to avoid heavy DB payload
+    if (limit > 100) limit = 100;
 
     const offset = (page - 1) * limit;
 
-    // 2. Build dynamic SQL WHERE clause & values array
+    // Build dynamic SQL WHERE clause (prefix columns with pc. to avoid ambiguity)
     const conditions = [];
     const params = [];
 
-    // Filter: Partial Name Match
     if (name) {
-        conditions.push(`name LIKE ?`);
+        conditions.push(`pc.name LIKE ?`);
         params.push(`%${name}%`);
     }
-
-    // Filter: Set ID
     if (set_id) {
-        conditions.push(`set_id = ?`);
+        conditions.push(`pc.set_id = ?`);
         params.push(set_id);
     }
-
-    // Filter: Exact Rarity (e.g., 'Rare Holo', 'Common')
     if (rarity) {
-        conditions.push(`rarity = ?`);
+        conditions.push(`pc.rarity = ?`);
         params.push(rarity);
     }
-
-    // Filter: Type (checks both type_1 and type_2)
     if (type) {
-        conditions.push(`(type_1 = ? OR type_2 = ?)`);
+        conditions.push(`(pc.type_1 = ? OR pc.type_2 = ?)`);
         params.push(type, type);
     }
 
-    // Construct the WHERE string if conditions exist
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    // 3. Count total matching items (needed for accurate pagination UI)
-    const countSql = `SELECT COUNT(*) AS total FROM pokemon_card pc ${whereClause}`;
+    // 2. Count UNIQUE cards for accurate pagination
+    const countSql = `SELECT COUNT(DISTINCT pc.id) AS total FROM pokemon_card pc ${whereClause}`;
 
     db.get(countSql, params, (err, countResult) => {
         if (err) {
@@ -95,41 +87,48 @@ app.get('/cards', (req, res) => {
         const totalItems = countResult.total;
         const totalPages = Math.ceil(totalItems / limit);
 
-        // 4. Query filtered data with LIMIT & OFFSET
+        // 3. Paginate UNIQUE card IDs first, then JOIN child tables
         const dataSql = `
+        WITH paginated_cards AS (
+            SELECT pc.id
+            FROM pokemon_card pc
+            ${whereClause}
+            ORDER BY pc.set_id ASC, pc.set_number ASC
+            LIMIT ? OFFSET ?
+        )
         SELECT
-            pc.*,
-            ci.location,
-            cs.name AS set_name,
-            cs.era,
-            cs.total AS set_total,
-            cs.complete_total,
-            cs.master_total,
-            cs.grandmaster_total,
-            cs.stamped_grandmaster_total,
-            cs.release_date,
-            cab.name AS ability_name,
-            cab.type AS ability_type,
-            cab.description AS ability_description,
-            cat.name AS atack_name,
-            cat.cost AS atack_cost,
-            cat.converted_energy_cost,
-            cat.damage,
-            cat.description AS atack_description,
-            cmp.price_cents,
-            cmp.recorded_at
-        FROM pokemon_card pc
+        pc.*,
+        ci.location,
+        cs.name AS set_name,
+        cs.era,
+        cs.total AS set_total,
+        cs.complete_total,
+        cs.master_total,
+        cs.grandmaster_total,
+        cs.stamped_grandmaster_total,
+        cs.release_date,
+        cab.id AS ability_id,
+        cab.name AS ability_name,
+        cab.type AS ability_type,
+        cab.description AS ability_description,
+        cat.id AS attack_id,
+        cat.name AS atack_name,
+        cat.cost AS atack_cost,
+        cat.converted_energy_cost,
+        cat.damage,
+        cat.description AS atack_description,
+        cmp.price_cents,
+        cmp.recorded_at
+        FROM paginated_cards p
+        JOIN pokemon_card pc ON p.id = pc.id
         LEFT JOIN card_image ci ON pc.id = ci.card_id
         LEFT JOIN pokemon_set cs ON pc.set_id = cs.id
         LEFT JOIN card_ability cab ON pc.id = cab.card_id
         LEFT JOIN card_attack cat ON pc.id = cat.card_id
         LEFT JOIN card_market_price cmp ON pc.id = cmp.card_id
-        ${whereClause}
-        ORDER BY pc.set_id ASC, pc.set_number ASC
-        LIMIT ? OFFSET ?
+        ORDER BY pc.set_id ASC, pc.set_number ASC;
         `;
 
-        // Append pagination params to the prepared query array
         const queryParams = [...params, limit, offset];
 
         db.all(dataSql, queryParams, (err, rows) => {
@@ -137,7 +136,50 @@ app.get('/cards', (req, res) => {
                 return res.status(500).json({ error: 'Database error fetching cards: ' + err.message });
             }
 
-            // 5. Return structured response
+            // 4. Group row duplicates into a single card object with an attacks array
+            const cardsMap = new Map();
+
+            rows.forEach(row => {
+                if (!cardsMap.has(row.id)) {
+                    // Extract base card fields
+                    const {
+                        ability_id, ability_name, ability_type, ability_description,
+                        attack_id, atack_name, atack_cost, converted_energy_cost, damage, atack_description,
+                        ...cardData
+                    } = row;
+
+                    cardsMap.set(row.id, {
+                        ...cardData,
+                        abilities: [],
+                        attacks: []
+                    });
+                }
+
+                const card = cardsMap.get(row.id);
+
+                // Add attack if present and not already added
+                if (row.attack_id && !card.attacks.some(a => a.id === row.attack_id)) {
+                    card.attacks.push({
+                        id: row.attack_id,
+                        name: row.atack_name,
+                        cost: row.atack_cost,
+                        converted_energy_cost: row.converted_energy_cost,
+                        damage: row.damage,
+                        description: row.atack_description
+                    });
+                }
+
+                // Add ability if present and not already added
+                if (row.ability_id && !card.abilities.some(a => a.id === row.ability_id)) {
+                    card.abilities.push({
+                        id: row.ability_id,
+                        name: row.ability_name,
+                        type: row.ability_type,
+                        description: row.ability_description
+                    });
+                }
+            });
+
             res.json({
                 success: true,
                 pagination: {
@@ -150,11 +192,11 @@ app.get('/cards', (req, res) => {
                 },
                 filtersApplied: {
                     name: name || null,
-                     set_id: set_id ? parseInt(set_id, 10) : null,
+                    set_id: set_id ? parseInt(set_id, 10) : null,
                      rarity: rarity || null,
                      type: type || null
                 },
-                data: rows
+                data: Array.from(cardsMap.values())
             });
         });
     });
@@ -250,7 +292,6 @@ app.post('/cards', (req, res) => {
         illustrator,
         dex_entry,
         copyright_text,
-        release_date,
         // Arrays for relational tables
         abilities = [],
         attacks = []
@@ -275,9 +316,9 @@ app.post('/cards', (req, res) => {
             pokemon_category, height, weight, run, foil, print_variant,
             stamp, weakness_type, weakness_modifier, resistance_type,
             resistance_modifier, retreat_cost, illustrator, dex_entry,
-            copyright_text, release_date
+            copyright_text
         ) VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         `;
 
@@ -289,7 +330,7 @@ app.post('/cards', (req, res) => {
                  weight || null, run || null, foil || null, print_variant || null,
                  stamp || null, weakness_type || null, weakness_modifier|| null,
                  resistance_type || null, resistance_modifier || null, retreat_cost || null,
-                 illustrator || null, dex_entry || null, copyright_text || null, release_date || null
+                 illustrator || null, dex_entry || null, copyright_text || null
         ];
 
         // 1. Insert Base Card

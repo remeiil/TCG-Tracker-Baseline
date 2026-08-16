@@ -28,7 +28,6 @@ CREATE TABLE pokemon_card (
     set_number TEXT,
     dex_entry TEXT,
     copyright_text TEXT,
-    release_date DATE,
     FOREIGN KEY (set_id) REFERENCES pokemon_set(id) ON DELETE CASCADE
 );
 -- Separate table for Card Abilities (1-to-Many)
@@ -65,11 +64,11 @@ CREATE TABLE pokemon_set (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
     era TEXT,
-    total INTEGER,
-    complete_total INTEGER,
-    master_total INTEGER,
-    grandmaster_total INTEGER,
-    stamped_grandmaster_total INTEGER,
+    total INTEGER, -- this is the total advertised on the cards
+    complete_total INTEGER, -- this is the total + any secret rare cards, they will have a number above the set total eg 207/165
+    master_total INTEGER, -- this is the complete_total + reverse holos
+    grandmaster_total INTEGER, -- master + promos (typically ETBs) + cosmo holos (blister packs)
+    stamped_grandmaster_total INTEGER, -- grandmaster total + all stamped variations (eg. e3, pokemon centre, prize packs, tournament)
     release_date DATE
 );
 -- users

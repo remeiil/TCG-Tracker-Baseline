@@ -24,9 +24,9 @@ Content-Type: application/json
     "hp": 120,
     "evolves_from": "Charmeleon",
     "weakness_type": "Water",
-    "weakness_value": "x2",
+    "weakness_modifier": "x2",
     "resistance_type": "Fighting",
-    "resistance_value": "-30",
+    "resistance_modifier": "-30",
     "retreat_cost": 3,
     "abilities": [
         {
@@ -42,6 +42,56 @@ Content-Type: application/json
             "converted_energy_cost": 4,
             "damage": "100",
             "description": "Discard 2 Energy cards attached to Charizard in order to use this attack."
+        }
+    ]
+}
+
+Complete card creation example:
+POST http://localhost:3000/cards
+Content-Type: application/json
+JSON
+{
+    "id": "",
+    "name": "",
+    "run": "",
+    "foil": "",
+    "print_variant": "",
+    "stamp": "",
+    "rarity": "",
+    "supertype": "",
+    "subtypes": "",
+    "type_1": "",
+    "type_2": "",
+    "hp": "",
+    "evolves_from": "",
+    "pokemon_number": "",
+    "pokemon_category": "",
+    "height": "",
+    "weight": "",
+    "weakness_type": "",
+    "weakness_modifier": "",
+    "resistance_type": "",
+    "resistance_modifier": "",
+    "retreat_cost": "",
+    "illustrator": "",
+    "set_id": "",
+    "set_number": "",
+    "dex_entry": "",
+    "copyright_text": "",
+    "abilities": [
+        {
+            "name": "",
+            "type": "",
+            "description": ""
+        }
+    ],
+    "attacks": [
+        {
+            "name": "",
+            "cost": "",
+            "converted_energy_cost": ,
+            "damage": "",
+            "description": ""
         }
     ]
 }
