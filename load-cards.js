@@ -48,7 +48,7 @@ async function loadCards() {
                 ${card.stamp != null ? "<p>Stamped: " + card.stamp + "</p>": ""}
                 <p>HP: ${card.hp}</p>
                 <p>Evolves from: ${card.evolves_from}</p>
-                ${card.pokemon_category != null ? "<p>Pokédex Category: " + card.pokemon_category + "Pokémon</p>": ""}
+                ${card.pokemon_category != null ? "<p>Pokédex Category: " + card.pokemon_category + " Pokémon</p>": ""}
                 ${card.height != null ? "<p>Height: " + card.height + "</p>": ""}
                 ${card.weight != null ? "<p>Weight: " + card.weight + "</p>": ""}
                 ${card.abilities.length > 0 ? "<p><strong>" + card.abilities[0].type + ": " + card.abilities[0].name + "</strong> " + card.abilities[0].description + "</p>" : ""}
