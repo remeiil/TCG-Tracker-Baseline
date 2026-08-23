@@ -14,14 +14,14 @@ async function loadCards() {
 
         const responseData = await response.json();
         loadedCards = responseData.data; // Store array for quick lookup on click
-        console.log('API Response:', loadedCards);
+        // console.log('API Response:', loadedCards);
 
         // Render card markup with data-card-id attribute and a clickable class
         container.innerHTML = `<div class="row m-auto" style="max-width: 1200px">` + loadedCards.map(card => `
         <div class="card-item p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white cursor-pointer" data-card-id="${card.id}">
             <img class="br05" src="${card.location}" width="100%">
             <div class="justify-between">
-                <div>
+                <div  id="thumb${card.id}">
                 <h4>${card.name}</h4>
                 <p>${card.set_name}</p>
                 <p>${card.set_number}</p>
@@ -29,8 +29,8 @@ async function loadCards() {
                 </div>
             </div>
         </div>
-        <div class="modal-overlay bg-charcoal-transparent " id="${card.id}">
-            <div class="bg-white modal p1 m1 br05 row">
+        <div class="modal-overlay bg-charcoal-transparent hide" id="modal${card.id}">
+            <div class="bg-white modal p1 m1 br05 row" style="width:1200px;">
                 <div class="col-sm-12 col-md-6 col-lg-3">
                 <img class="br05" src="${card.location}" width="100%">
                 </div>
@@ -72,39 +72,27 @@ async function loadCards() {
     }
 }
 
-// Function to handle opening and populating your modal
-function openCardModal(card) {
-    console.log('Selected Card Details:', card);
-
-    // TODO: Plug into your modal DOM elements here
-    // e.g., document.getElementById('modal-title').textContent = card.name;
-    // e.g., render card.attacks array if present
-
-    // Example: Show your modal backdrop/wrapper
-    // const modal = document.getElementById('card-modal');
-    // modal.classList.add('active');
-}
-
-// Event listener setup
+// Event Delegation setup
 document.addEventListener('DOMContentLoaded', () => {
     loadCards();
 
-    // Event delegation on the parent container
     const container = document.getElementById('cards-container');
 
     container.addEventListener('click', (event) => {
-        // Find if a card element (or any of its children) was clicked
+        // 1. OPEN MODAL: Check if a card item was clicked
         const cardElement = event.target.closest('.card-item');
-
         if (cardElement) {
-            const cardId = parseInt(cardElement.dataset.cardId, 10);
-
-            // Look up full card object from local array (includes nested attacks/abilities)
-            const selectedCard = loadedCards.find(card => card.id === cardId);
-
-            if (selectedCard) {
-                openCardModal(selectedCard);
+            const cardId = cardElement.dataset.cardId;
+            const targetModal = document.getElementById(`modal${cardId}`);
+            if (targetModal) {
+                targetModal.classList.remove('hide');
             }
+            return;
+        }
+
+        // 2. CLOSE MODAL: Check if clicking outside the modal content (on the overlay backdrop)
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.classList.add('hide');
         }
     });
 });
