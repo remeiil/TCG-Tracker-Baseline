@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 const API_BASE_URL = 'http://localhost:3000';
 
 export default function Update() {
-  const [step, setStep] = useState(1); // 1: Select/Create Set, 2: Check/Create Card
+  const [step, setStep] = useState(1); // 1: Set, 2: Card, 3: Image Upload
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
@@ -12,47 +12,25 @@ export default function Update() {
   const [selectedSetId, setSelectedSetId] = useState('');
   const [isCreatingNewSet, setIsCreatingNewSet] = useState(false);
   const [newSetData, setNewSetData] = useState({
-    name: '',
-    era: '',
-    total: '',
-    complete_total: '',
-    master_total: '',
-    grandmaster_total: '',
-    stamped_grandmaster_total: '',
-    release_date: ''
+    name: '', era: '', total: '', complete_total: '',
+    master_total: '', grandmaster_total: '', stamped_grandmaster_total: '', release_date: ''
   });
 
   // --- CARD STATE ---
+  const [activeCardId, setActiveCardId] = useState(null); // Retains card_id for Step 3
   const [existingCardFound, setExistingCardFound] = useState(null);
   const [cardData, setCardData] = useState({
-    name: '',
-    run: '',
-    foil: '',
-    print_variant: '',
-    stamp: '',
-    rarity: '',
-    supertype: 'Pokémon',
-    subtypes: '',
-    type_1: '',
-    type_2: '',
-    hp: '',
-    evolves_from: '',
-    pokemon_number: '',
-    pokemon_category: '',
-    height: '',
-    weight: '',
-    weakness_type: '',
-    weakness_modifier: '',
-    resistance_type: '',
-    resistance_modifier: '',
-    retreat_cost: '',
-    illustrator: '',
-    set_number: '',
-    dex_entry: '',
-    copyright_text: '',
-    abilities: [],
-    attacks: []
+    name: '', run: '', foil: '', print_variant: '', stamp: '', rarity: '',
+    supertype: 'Pokémon', subtypes: '', type_1: '', type_2: '', hp: '',
+    evolves_from: '', pokemon_number: '', pokemon_category: '', height: '',
+    weight: '', weakness_type: '', weakness_modifier: '', resistance_type: '',
+    resistance_modifier: '', retreat_cost: '', illustrator: '', set_number: '',
+    dex_entry: '', copyright_text: '', abilities: [], attacks: []
   });
+
+  // --- IMAGE UPLOAD STATE ---
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     fetchSets();
@@ -68,7 +46,7 @@ export default function Update() {
     }
   };
 
-  // --- STEP 1 HANDLERS: SET CREATION / SELECTION ---
+  // --- STEP 1: SET HANDLERS ---
   const handleSetSubmit = async (e) => {
     e.preventDefault();
     setMessage(null);
@@ -89,7 +67,6 @@ export default function Update() {
 
     setLoading(true);
     try {
-      // Cast numeric strings to numbers or null before posting
       const payload = {
         ...newSetData,
         name: newSetData.name.trim(),
@@ -121,7 +98,7 @@ export default function Update() {
     }
   };
 
-  // --- STEP 2 HANDLERS: CARD CHECK & CREATION ---
+  // --- STEP 2: CARD HANDLERS ---
   const handleCheckCard = async () => {
     if (!cardData.name.trim()) {
       setMessage({ type: 'error', text: 'Enter a card name to check.' });
@@ -146,12 +123,14 @@ export default function Update() {
         ) || json.data[0];
 
         setExistingCardFound(matchedCard);
+        setActiveCardId(matchedCard.id);
         setMessage({
           type: 'info',
-          text: `Card "${matchedCard.name}" already exists in this set (ID: ${matchedCard.id}).`
+          text: `Card "${matchedCard.name}" exists (ID: ${matchedCard.id}). You can attach an image directly or proceed to edit.`
         });
       } else {
         setExistingCardFound(null);
+        setActiveCardId(null);
         setMessage({ type: 'success', text: 'Card not found in set. You can add its full details below.' });
       }
     } catch (err) {
@@ -172,7 +151,6 @@ export default function Update() {
 
     setLoading(true);
     try {
-      // Cast integers and clean array payloads
       const payload = {
         ...cardData,
         name: cardData.name.trim(),
@@ -202,9 +180,59 @@ export default function Update() {
 
       if (!res.ok) throw new Error(json.error || 'Failed to create card.');
 
-      setMessage({ type: 'success', text: `Card "${cardData.name}" added successfully!` });
+      setActiveCardId(json.data.id);
+      setMessage({ type: 'success', text: `Card "${cardData.name}" created! Proceed to upload image.` });
+      setStep(3); // Proceed to Step 3: Image Upload
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // Reset Card Form
+  // --- STEP 3: IMAGE HANDLERS ---
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    e.preventDefault();
+    if (!selectedFile) {
+      setMessage({ type: 'error', text: 'Please select an image file to upload.' });
+      return;
+    }
+    if (!activeCardId) {
+      setMessage({ type: 'error', text: 'No card selected to attach this image to.' });
+      return;
+    }
+
+    setLoading(true);
+    setMessage(null);
+
+    const formData = new FormData();
+    formData.append('card_id', activeCardId);
+    formData.append('image', selectedFile);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/cards/image`, {
+        method: 'POST',
+        body: formData // Content-Type header set automatically by browser
+      });
+      const json = await res.json();
+
+      if (!res.ok) throw new Error(json.error || 'Failed to upload image.');
+
+      setMessage({ type: 'success', text: 'Card image uploaded and linked successfully!' });
+      
+      // Cleanup Step State
+      setSelectedFile(null);
+      setImagePreview(null);
+      setExistingCardFound(null);
+      setActiveCardId(null);
       setCardData({
         name: '', run: '', foil: '', print_variant: '', stamp: '', rarity: '',
         supertype: 'Pokémon', subtypes: '', type_1: '', type_2: '', hp: '',
@@ -213,7 +241,7 @@ export default function Update() {
         resistance_modifier: '', retreat_cost: '', illustrator: '', set_number: '',
         dex_entry: '', copyright_text: '', abilities: [], attacks: []
       });
-      setExistingCardFound(null);
+      setStep(2); // Loop back to card entry
     } catch (err) {
       setMessage({ type: 'error', text: err.message });
     } finally {
@@ -221,46 +249,29 @@ export default function Update() {
     }
   };
 
-  // --- DYNAMIC ABILITY HANDLERS ---
+  // --- DYNAMIC FIELD HANDLERS ---
   const handleAddAbility = () => {
-    setCardData({
-      ...cardData,
-      abilities: [...cardData.abilities, { name: '', type: 'Ability', description: '' }]
-    });
+    setCardData({ ...cardData, abilities: [...cardData.abilities, { name: '', type: 'Ability', description: '' }] });
   };
-
   const handleAbilityChange = (index, field, value) => {
     const updated = [...cardData.abilities];
     updated[index][field] = value;
     setCardData({ ...cardData, abilities: updated });
   };
-
   const handleRemoveAbility = (index) => {
-    setCardData({
-      ...cardData,
-      abilities: cardData.abilities.filter((_, i) => i !== index)
-    });
+    setCardData({ ...cardData, abilities: cardData.abilities.filter((_, i) => i !== index) });
   };
 
-  // --- DYNAMIC ATTACK HANDLERS ---
   const handleAddAttack = () => {
-    setCardData({
-      ...cardData,
-      attacks: [...cardData.attacks, { name: '', cost: '', converted_energy_cost: '', damage: '', description: '' }]
-    });
+    setCardData({ ...cardData, attacks: [...cardData.attacks, { name: '', cost: '', converted_energy_cost: '', damage: '', description: '' }] });
   };
-
   const handleAttackChange = (index, field, value) => {
     const updated = [...cardData.attacks];
     updated[index][field] = value;
     setCardData({ ...cardData, attacks: updated });
   };
-
   const handleRemoveAttack = (index) => {
-    setCardData({
-      ...cardData,
-      attacks: cardData.attacks.filter((_, i) => i !== index)
-    });
+    setCardData({ ...cardData, attacks: cardData.attacks.filter((_, i) => i !== index) });
   };
 
   return (
@@ -346,6 +357,13 @@ export default function Update() {
               <p><strong>Name:</strong> {existingCardFound.name}</p>
               <p><strong>Set Number:</strong> {existingCardFound.set_number}</p>
               <p><strong>Rarity:</strong> {existingCardFound.rarity}</p>
+              <button 
+                type="button" 
+                onClick={() => setStep(3)} 
+                style={{ padding: '0.5rem 1rem', backgroundColor: '#17a2b8', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                Attach Image to Existing Card →
+              </button>
             </div>
           )}
 
@@ -410,7 +428,7 @@ export default function Update() {
                   <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.75rem', padding: '0.5rem', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <input type="text" placeholder="Ability Name" value={ability.name} onChange={(e) => handleAbilityChange(index, 'name', e.target.value)} style={{ flex: 1, padding: '0.3rem' }} />
-                      <input type="text" placeholder="Ability Type (default: Ability)" value={ability.type} onChange={(e) => handleAbilityChange(index, 'type', e.target.value)} style={{ flex: 1, padding: '0.3rem' }} />
+                      <input type="text" placeholder="Ability Type" value={ability.type} onChange={(e) => handleAbilityChange(index, 'type', e.target.value)} style={{ flex: 1, padding: '0.3rem' }} />
                       <button type="button" onClick={() => handleRemoveAbility(index)} style={{ color: 'red' }}>✕</button>
                     </div>
                     <textarea placeholder="Ability Description" value={ability.description} onChange={(e) => handleAbilityChange(index, 'description', e.target.value)} style={{ padding: '0.3rem', height: '50px' }} />
@@ -426,7 +444,7 @@ export default function Update() {
                   <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.75rem', padding: '0.5rem', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <input type="text" placeholder="Attack Name" value={attack.name} onChange={(e) => handleAttackChange(index, 'name', e.target.value)} style={{ flex: 2, padding: '0.3rem' }} />
-                      <input type="text" placeholder="Cost (e.g. Fire, Colorless)" value={attack.cost} onChange={(e) => handleAttackChange(index, 'cost', e.target.value)} style={{ flex: 2, padding: '0.3rem' }} />
+                      <input type="text" placeholder="Cost" value={attack.cost} onChange={(e) => handleAttackChange(index, 'cost', e.target.value)} style={{ flex: 2, padding: '0.3rem' }} />
                       <input type="number" placeholder="Energy Count" value={attack.converted_energy_cost} onChange={(e) => handleAttackChange(index, 'converted_energy_cost', e.target.value)} style={{ flex: 1, padding: '0.3rem' }} />
                       <input type="text" placeholder="Damage" value={attack.damage} onChange={(e) => handleAttackChange(index, 'damage', e.target.value)} style={{ flex: 1, padding: '0.3rem' }} />
                       <button type="button" onClick={() => handleRemoveAttack(index)} style={{ color: 'red' }}>✕</button>
@@ -437,7 +455,7 @@ export default function Update() {
                 <button type="button" onClick={handleAddAttack}>+ Add Attack</button>
               </fieldset>
 
-              {/* Miscellaneous Info */}
+              {/* Text & Lore */}
               <fieldset style={{ padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
                 <legend><strong>Text & Lore</strong></legend>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -447,10 +465,34 @@ export default function Update() {
               </fieldset>
 
               <button type="submit" disabled={loading} style={{ padding: '0.75rem', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '1rem', cursor: 'pointer' }}>
-                {loading ? 'Inserting Card into Database...' : 'Save Complete Card Record'}
+                {loading ? 'Inserting Card into Database...' : 'Save Card & Proceed to Image Upload →'}
               </button>
             </form>
           )}
+        </div>
+      )}
+
+      {/* STEP 3: IMAGE UPLOAD */}
+      {step === 3 && (
+        <div>
+          <button onClick={() => setStep(2)} style={{ marginBottom: '1rem' }}>← Back to Card Details</button>
+          <h3>Step 3: Card Image Upload</h3>
+          <p>Attaching image for Card ID: <strong>{activeCardId}</strong></p>
+
+          <form onSubmit={handleImageUpload} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <input type="file" accept="image/*" onChange={handleFileChange} />
+
+            {imagePreview && (
+              <div>
+                <p><strong>Preview:</strong></p>
+                <img src={imagePreview} alt="Card Preview" style={{ maxWidth: '200px', borderRadius: '8px', border: '1px solid #ccc' }} />
+              </div>
+            )}
+
+            <button type="submit" disabled={loading || !selectedFile} style={{ padding: '0.75rem', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '1rem', cursor: 'pointer' }}>
+              {loading ? 'Uploading Image...' : 'Upload Image & Complete Workflow'}
+            </button>
+          </form>
         </div>
       )}
     </div>

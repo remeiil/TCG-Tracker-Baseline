@@ -1,5 +1,7 @@
 // server.js
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
 const db = require('./db'); // Assuming sqlite3 instance
 
 const app = express();
@@ -450,6 +452,55 @@ app.get('/sets', (req, res) => {
             data: rows
         });
     });
+});
+
+// Serve uploaded images static folder
+app.use('/uploads', express.static('uploads'));
+
+// Configure Multer storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './TCGBaseline/public/img'); // Ensure this folder exists on your root server dir
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, `card-${req.body.card_id || 'img'}-${uniqueSuffix}${ext}`);
+  }
+});
+
+const upload = multer({ storage });
+
+/**
+ * POST /cards/image
+ * Body: Multipart FormData containing 'card_id' and 'image' file
+ */
+app.post('/cards/image', upload.single('image'), (req, res) => {
+  const { card_id } = req.body;
+
+  if (!card_id || !req.file) {
+    return res.status(400).json({ error: 'card_id and image file are required.' });
+  }
+
+  // Construct URL path saved in database
+  const location = `img/${req.file.filename}`;
+
+  const sql = `INSERT INTO card_image (card_id, location) VALUES (?, ?)`;
+
+  db.run(sql, [card_id, location], function (err) {
+    if (err) {
+      return res.status(500).json({ error: 'Database insertion error: ' + err.message });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: this.lastID,
+        card_id: parseInt(card_id, 10),
+        location
+      }
+    });
+  });
 });
 
 const PORT = process.env.PORT || 3000;
