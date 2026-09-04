@@ -6,10 +6,33 @@ export default function CardGallery() {
   const [error, setError] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
 
+  // Search state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // 1. Debounce search input to avoid hitting the API on every keypress
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // 2. Fetch cards when debounced query changes
   useEffect(() => {
     async function fetchCards() {
+      setLoading(true);
+      setError(null);
       try {
-        const response = await fetch('http://localhost:3000/cards');
+        const queryParams = new URLSearchParams();
+        if (debouncedSearchTerm) {
+          queryParams.append('name', debouncedSearchTerm);
+        }
+
+        const url = `http://localhost:3000/cards?${queryParams.toString()}`;
+        const response = await fetch(url);
+        
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -24,38 +47,59 @@ export default function CardGallery() {
     }
 
     fetchCards();
-  }, []);
+  }, [debouncedSearchTerm]);
 
   const formatPrice = (priceCents, suffix = '') => {
     if (priceCents == null) return `0.00 ${suffix}`.trim();
     return `${(priceCents / 100).toFixed(2)} ${suffix}`.trim();
   };
 
-  if (loading) return <div>Loading cards...</div>;
-  if (error) return <div>Error loading cards: {error}</div>;
-
   return (
     <div id="cards-container">
-      <div className="row m-auto" style={{ maxWidth: '1200px' }}>
-        {/* Card Grid */}
-        {cards.map((card) => (
-          <div
-            key={card.id}
-            className="card-item p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white cursor-pointer"
-            onClick={() => setSelectedCard(card)}
-          >
-            <img className="br05" src={card.location} alt={card.name} width="100%" />
-            <div className="justify-between">
-              <div id={`thumb${card.id}`}>
-                <h4>{card.name}</h4>
-                <p>{card.set_name}</p>
-                <p>{card.set_number}</p>
-                <p className="bold">${formatPrice(card.price_cents)}</p>
+      {/* Search Input Bar */}
+      <div className="row m-auto mb-1 p025" style={{ maxWidth: '1200px' }}>
+        <div className="col-12">
+          <input
+            type="text"
+            className="p05 br05 border-sage"
+            style={{ width: '100%', fontSize: '1rem' }}
+            placeholder="Search cards by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Loading & Error Indicators */}
+      {loading && <div className="text-center p1">Loading cards...</div>}
+      {error && <div className="text-center p1 font-danger">Error loading cards: {error}</div>}
+
+      {/* Card Grid */}
+      {!loading && !error && cards.length === 0 && (
+        <div className="text-center p1">No cards found matching "{debouncedSearchTerm}".</div>
+      )}
+
+      {!loading && !error && (
+        <div className="row m-auto" style={{ maxWidth: '1200px' }}>
+          {cards.map((card) => (
+            <div
+              key={card.id}
+              className="card-item p05 col-sm-6 col-lg-2 border-sage br05 m025 bg-white cursor-pointer"
+              onClick={() => setSelectedCard(card)}
+            >
+              <img className="br05" src={card.location} alt={card.name} width="100%" />
+              <div className="justify-between">
+                <div id={`thumb${card.id}`}>
+                  <h4>{card.name}</h4>
+                  <p>{card.set_name}</p>
+                  <p>{card.set_number}</p>
+                  <p className="bold">${formatPrice(card.price_cents)}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Single Modal Instance rendered conditionally */}
       {selectedCard && (
@@ -66,7 +110,7 @@ export default function CardGallery() {
           <div
             className="bg-white modal p1 m1 br05 row"
             style={{ width: '1200px' }}
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside content
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="col-sm-12 col-md-6 col-lg-3">
               <img className="br05" src={selectedCard.location} alt={selectedCard.name} width="100%" />

@@ -15,7 +15,7 @@ function App() {
         <div className='col-sm-10 center'>
             <h1>Rem's Baseline Card Tracker</h1>
         </div>
-        <div className='col-sm-1 center'><h1><i className='fa-solid fa-magnifying-glass'></i></h1></div>
+        <div className='col-sm-1 center'></div>
       </div>
 
       {/* Main Content Area */}
