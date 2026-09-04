@@ -7,16 +7,16 @@ const app = express();
 const cors = require('cors');
 const allowedOrigins = [
     "http://localhost:5173",
-"http://localhost:3000",
-"http://localhost:8000",
-"http://localhost:8002",
-"https://healer.remeil.co.nz",
-"https://remeil.co.nz"
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://localhost:8002",
+    "https://healer.remeil.co.nz",
+    "https://remeil.co.nz"
 ];
 app.use(cors({
     origin: function (origin, callback) {
         // allow requests with no origin (like curl, Postman)
-        if (origin) return callback(null, true); //change to !origin for production
+        if (!origin) return callback(null, true); //change to !origin for production
         if (allowedOrigins.includes(origin)) {
             return callback(null, true);
         } else {
@@ -419,6 +419,35 @@ app.post('/cards', (req, res) => {
                     }
                 });
             });
+        });
+    });
+});
+
+app.get('/sets', (req, res) => {
+    const sql = `
+        SELECT 
+            id,
+            name,
+            era,
+            total,
+            complete_total,
+            master_total,
+            grandmaster_total,
+            stamped_grandmaster_total,
+            release_date
+        FROM pokemon_set
+        ORDER BY release_date DESC
+    `;
+
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to fetch sets: ' + err.message });
+        }
+
+        res.status(200).json({
+            success: true,
+            count: rows.length,
+            data: rows
         });
     });
 });

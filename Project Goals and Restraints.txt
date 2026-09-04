@@ -5,6 +5,7 @@ Create inventory system for tracking pokemon cards
 Bonus
 --------
 light and dark mode
+close button on modals that is always accessible
 
 
 Views

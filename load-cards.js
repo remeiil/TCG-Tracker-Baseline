@@ -25,7 +25,7 @@ async function loadCards() {
                 <h4>${card.name}</h4>
                 <p>${card.set_name}</p>
                 <p>${card.set_number}</p>
-                <p class="font-medium-jungle bold">$${card.price_cents != null ? (card.price_cents / 100).toFixed(2) : "0.00 undisclosed"}</p>
+                <p class="bold">$${card.price_cents != null ? (card.price_cents / 100).toFixed(2) : "0.00 undisclosed"}</p>
                 </div>
             </div>
         </div>
@@ -96,6 +96,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+//my cards view
+async function loadProtectedCards() {
+    try {
+        const response = await fetchWithAuth('https://your-api.com/api/my-cards');
+        const cardsData = await response.json();
+
+        // Render card UI...
+        console.log('Protected cards retrieved:', cardsData);
+    } catch (err) {
+        console.error('Could not fetch protected cards:', err.message);
+    }
+}
+
 
 // Execute the function after the page loads
 document.addEventListener('DOMContentLoaded', loadCards);

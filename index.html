@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!doctype html>
 <html lang="en">
   <head>
@@ -23,7 +24,29 @@
   <body class="bg-seashell">
     <div class="container">
         <div class="row gradient-red shadow-subtle mb1 p05 font-white">
-            <div class="col-sm-1 center"><h1><i class="fa-solid fa-bars"></i></h1></div>
+            <div class="col-sm-1 center">
+              <div class="dropdown">
+                <h1><i class="fa-solid fa-bars"></i></h1>
+                <div class="dropdown-content br05 border-sage bg-white font-black p1 shadow-subtle">
+                  <ul class="list-style-none">
+                    <h4>Set Changes</h4>
+                    <li>Add set to database</li>
+                    <li>Edit an existing set</li>
+                    <hr class="m05">
+                    <h4>Card Changes</h4>
+                    <li>Add card to database</li>
+                    <li>Edit an existing card</li>
+                    <li>Update card price information</li>
+                    <hr class="m05">
+                    <h4>My Account</h4>
+                    <li id="nav-login" style="cursor: pointer;">Login</li>
+                    <li id="nav-logout" style="cursor: pointer; display: none;">Logout</li>
+                    <li>Register</li>
+                    <li id="nav-my-cards" style="cursor: pointer;">My Cards</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
             <div class="col-sm-10 center">
                 <h1>Rem's Baseline Card Tracker</h1>
             </div>
@@ -32,9 +55,28 @@
 
         <div id="cards-container"></div>
 
+        <!-- Modal target by ID, hidden by default -->
+        <div id="login-modal" class="modal-overlay bg-charcoal-transparent" style="display: none;">
+          <div class="bg-white modal p1 m1 br05 row" style="width:600px; position: relative;">
+            <div class="col-sm-12">
+              <span id="close-modal" style="position: absolute; top: 10px; right: 15px; cursor: pointer; font-weight: bold;">✕</span>
+              <h1 class="center">Login</h1>
 
+              <div id="login-error" style="color: red; display: none;" class="mb1 center"></div>
+
+              <form id="login-form" class="large-inputs form">
+                <label for="uname">Username: </label>
+                <input type="text" id="uname" name="uname" required>
+                <label for="pword">Password: </label>
+                <input type="password" id="pword" name="pword" required>
+                <button class="btn" type="submit">Submit</button>
+              </form>
+            </div>
+          </div>
+        </div>
 
     </div>
 </body>
+<script src="auth.js"></script>
 <script src="load-cards.js"></script>
 </html>
