@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import CardPriceHistory from './CardPriceHistory';
+import CardPriceDisplay from './CardPriceDisplay';
 
 export default function CardGallery() {
   const [cards, setCards] = useState([]);
@@ -30,7 +32,7 @@ export default function CardGallery() {
           queryParams.append('name', debouncedSearchTerm);
         }
 
-        const url = `http://localhost:3000/cards?${queryParams.toString()}`;
+        const url = `http://192.168.1.20:3000/cards?${queryParams.toString()}`;
         const response = await fetch(url);
         
         if (!response.ok) {
@@ -93,7 +95,7 @@ export default function CardGallery() {
                   <h4>{card.name}</h4>
                   <p>{card.set_name}</p>
                   <p>{card.set_number}</p>
-                  <p className="bold">${formatPrice(card.price_cents)}</p>
+                  <CardPriceDisplay card={card} formatPrice={formatPrice} />
                 </div>
               </div>
             </div>
@@ -112,6 +114,15 @@ export default function CardGallery() {
             style={{ width: '1200px' }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Mobile Close Button (X) */}
+            <button
+              type="button"
+              className="modal-close-btn bg-amber-flame"
+              onClick={() => setSelectedCard(null)}
+              aria-label="Close modal"
+            >
+              ✕
+            </button>
             <div className="col-sm-12 col-md-6 col-lg-3">
               <img className="br05" src={selectedCard.location} alt={selectedCard.name} width="100%" />
             </div>
@@ -131,9 +142,11 @@ export default function CardGallery() {
               <p>
                 {selectedCard.rarity} - {selectedCard.set_number}
               </p>
-              <p className="font-medium-jungle bold">
-                ${formatPrice(selectedCard.price_cents, 'NZD')}
-              </p>
+              <CardPriceDisplay card={selectedCard} formatPrice={formatPrice} />
+              <CardPriceHistory 
+                cardId={selectedCard.id} 
+                cardName={selectedCard.name} 
+              />
               <p className="font-sage" style={{ fontStyle: 'italic' }}>
                 {selectedCard.recorded_at != null
                   ? `Last tracked: ${selectedCard.recorded_at}`

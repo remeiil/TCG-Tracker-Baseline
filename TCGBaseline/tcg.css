@@ -29,3 +29,22 @@
 .type-icon.sm {
 	zoom: 0.15;
 }
+
+.modal-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  line-height: 1;
+  color: #333;
+  cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 50%;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}

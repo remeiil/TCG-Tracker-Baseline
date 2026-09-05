@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'http://192.168.1.20:3000';
 
 export default function Update() {
   const [step, setStep] = useState(1); // 1: Set, 2: Card, 3: Image Upload
@@ -316,26 +316,29 @@ export default function Update() {
               </select>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
-              <input type="text" placeholder="Set Name *" value={newSetData.name} onChange={(e) => setNewSetData({ ...newSetData, name: e.target.value })} style={{ padding: '0.5rem' }} />
-              <input type="text" placeholder="Era (e.g. Scarlet & Violet)" value={newSetData.era} onChange={(e) => setNewSetData({ ...newSetData, era: e.target.value })} style={{ padding: '0.5rem' }} />
-              
-              <input type="number" placeholder="Total Base Cards" value={newSetData.total} onChange={(e) => setNewSetData({ ...newSetData, total: e.target.value })} style={{ padding: '0.5rem' }} />
-              <input type="number" placeholder="Complete Total" value={newSetData.complete_total} onChange={(e) => setNewSetData({ ...newSetData, complete_total: e.target.value })} style={{ padding: '0.5rem' }} />
-              
-              <input type="number" placeholder="Master Total" value={newSetData.master_total} onChange={(e) => setNewSetData({ ...newSetData, master_total: e.target.value })} style={{ padding: '0.5rem' }} />
-              <input type="number" placeholder="Grandmaster Total" value={newSetData.grandmaster_total} onChange={(e) => setNewSetData({ ...newSetData, grandmaster_total: e.target.value })} style={{ padding: '0.5rem' }} />
-              
-              <input type="number" placeholder="Stamped Grandmaster Total" value={newSetData.stamped_grandmaster_total} onChange={(e) => setNewSetData({ ...newSetData, stamped_grandmaster_total: e.target.value })} style={{ padding: '0.5rem' }} />
-              <div>
-                <label style={{ fontSize: '0.8rem', display: 'block' }}>Release Date</label>
-                <input type="date" value={newSetData.release_date} onChange={(e) => setNewSetData({ ...newSetData, release_date: e.target.value })} style={{ width: '100%', padding: '0.4rem' }} />
-              </div>
+            <div className='row mb1'>
+              <p className='col-sm-12'>The <strong>Set Name</strong> is just the name of the set, for example "Destined Rivals"</p>
+              <input className='col-sm-12 p05' type="text" placeholder="Set Name *" value={newSetData.name} onChange={(e) => setNewSetData({ ...newSetData, name: e.target.value })} />
+              <p className='col-sm-12'>The <strong>Era</strong> is the overarching group of card sets like "Neo" or "Scarlet & Violet"</p>
+              <input className='col-sm-12 p05' type="text" placeholder="Era (e.g. Scarlet & Violet)" value={newSetData.era} onChange={(e) => setNewSetData({ ...newSetData, era: e.target.value })} style={{ padding: '0.5rem' }} />
+              <p className='col-sm-12'><strong>Total Base Cards</strong> is the total number on the card for example 102  for Base Set or 182 for Destined Rivals</p>
+              <input className='col-sm-12 p05' type="number" placeholder="Total Base Cards" value={newSetData.total} onChange={(e) => setNewSetData({ ...newSetData, total: e.target.value })} style={{ padding: '0.5rem' }} />
+              <p className='col-sm-12'>The <strong>Complete Total</strong> is the count of all cards officially released for the set</p>
+              <input className='col-sm-12 p05' type="number" placeholder="Complete Total" value={newSetData.complete_total} onChange={(e) => setNewSetData({ ...newSetData, complete_total: e.target.value })} style={{ padding: '0.5rem' }} />
+              <p className='col-sm-12'>The <strong>Master Total</strong> is the Complete Total + a count for each reverse holo</p>
+              <input className='col-sm-12 p05' type="number" placeholder="Master Total" value={newSetData.master_total} onChange={(e) => setNewSetData({ ...newSetData, master_total: e.target.value })} style={{ padding: '0.5rem' }} />
+              <p className='col-sm-12'>The <strong>Grandmaster Total</strong> is the Master Total + Promos (typically from ETBs) + cosmo holos (typically from Blister Packs)</p>
+              <input className='col-sm-12 p05' type="number" placeholder="Grandmaster Total" value={newSetData.grandmaster_total} onChange={(e) => setNewSetData({ ...newSetData, grandmaster_total: e.target.value })} style={{ padding: '0.5rem' }} />
+              <p className='col-sm-12'>The <strong>Stamped Grandmaster Total</strong> is the Grandmaster Total + any stamped variants.</p>
+              <input className='col-sm-12 p05' type="number" placeholder="Stamped Grandmaster Total" value={newSetData.stamped_grandmaster_total} onChange={(e) => setNewSetData({ ...newSetData, stamped_grandmaster_total: e.target.value })} style={{ padding: '0.5rem' }} />
+
+              <label className='col-sm-12'>Release Date</label>
+              <input className='col-sm-12 p05' type="date" value={newSetData.release_date} onChange={(e) => setNewSetData({ ...newSetData, release_date: e.target.value })} />
             </div>
           )}
 
-          <button type="submit" disabled={loading} style={{ padding: '0.5rem 1rem' }}>
-            {loading ? 'Saving Set...' : 'Continue to Card Form →'}
+          <button type="submit" disabled={loading} className='btn border br025 bg-amber-flame'>
+            {loading ? 'Saving Set...' : <>Continue to Card Entry <i className="fa-solid fa-right-long"></i></>}
           </button>
         </form>
       )}
@@ -343,12 +346,12 @@ export default function Update() {
       {/* STEP 2: CARD SETUP */}
       {step === 2 && (
         <div>
-          <button onClick={() => setStep(1)} style={{ marginBottom: '1rem' }}>← Back to Set Selection</button>
+          <button className='mb1 btn border' onClick={() => setStep(1)}><i className="fa-solid fa-left-long"></i> Back to Set Selection</button>
           <h3>Step 2: Card Search & Comprehensive Creation</h3>
 
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-            <input type="text" placeholder="Card Name to Check..." value={cardData.name} onChange={(e) => setCardData({ ...cardData, name: e.target.value })} style={{ flex: 1, padding: '0.5rem' }} />
-            <button type="button" onClick={handleCheckCard} disabled={loading} style={{ padding: '0.5rem 1rem' }}>Check Database</button>
+          <div className='row mb1'>
+            <input className='col-sm-8 p05' type="text" placeholder="Card Name to Check..." value={cardData.name} onChange={(e) => setCardData({ ...cardData, name: e.target.value })} />
+            <button className='col-sm-4 btn border' type="button" onClick={handleCheckCard} disabled={loading} style={{ padding: '0.5rem 1rem' }}>Check Database</button>
           </div>
 
           {existingCardFound && (
@@ -373,51 +376,51 @@ export default function Update() {
               {/* General Information */}
               <fieldset style={{ padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
                 <legend><strong>General Information</strong></legend>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
-                  <input type="text" placeholder="Card Name *" value={cardData.name} onChange={(e) => setCardData({ ...cardData, name: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Set Number (e.g. 001/198)" value={cardData.set_number} onChange={(e) => setCardData({ ...cardData, set_number: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Supertype (e.g. Pokémon)" value={cardData.supertype} onChange={(e) => setCardData({ ...cardData, supertype: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Subtypes (e.g. Stage 1)" value={cardData.subtypes} onChange={(e) => setCardData({ ...cardData, subtypes: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Rarity" value={cardData.rarity} onChange={(e) => setCardData({ ...cardData, rarity: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Illustrator" value={cardData.illustrator} onChange={(e) => setCardData({ ...cardData, illustrator: e.target.value })} style={{ padding: '0.4rem' }} />
+                <div className='row'>
+                  <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Card Name *" value={cardData.name} onChange={(e) => setCardData({ ...cardData, name: e.target.value })} />
+                  <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Set Number (e.g. 001/198)" value={cardData.set_number} onChange={(e) => setCardData({ ...cardData, set_number: e.target.value })} />
+                  <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Supertype (e.g. Pokémon)" value={cardData.supertype} onChange={(e) => setCardData({ ...cardData, supertype: e.target.value })} />
+                  <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Subtypes (e.g. Stage 1)" value={cardData.subtypes} onChange={(e) => setCardData({ ...cardData, subtypes: e.target.value })} />
+                  <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Rarity" value={cardData.rarity} onChange={(e) => setCardData({ ...cardData, rarity: e.target.value })} />
+                  <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Illustrator" value={cardData.illustrator} onChange={(e) => setCardData({ ...cardData, illustrator: e.target.value })} />
                 </div>
               </fieldset>
 
               {/* Printing & Variants */}
               <fieldset style={{ padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
                 <legend><strong>Printing & Variants</strong></legend>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.5rem' }}>
-                  <input type="text" placeholder="Run" value={cardData.run} onChange={(e) => setCardData({ ...cardData, run: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Foil" value={cardData.foil} onChange={(e) => setCardData({ ...cardData, foil: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Print Variant" value={cardData.print_variant} onChange={(e) => setCardData({ ...cardData, print_variant: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Stamp" value={cardData.stamp} onChange={(e) => setCardData({ ...cardData, stamp: e.target.value })} style={{ padding: '0.4rem' }} />
+                <div className='row'>
+                  <input className='col-sm-6 col-md-3 p05' type="text" placeholder="Run" value={cardData.run} onChange={(e) => setCardData({ ...cardData, run: e.target.value })} />
+                  <input className='col-sm-6 col-md-3 p05' type="text" placeholder="Foil" value={cardData.foil} onChange={(e) => setCardData({ ...cardData, foil: e.target.value })} />
+                  <input className='col-sm-6 col-md-3 p05' type="text" placeholder="Print Variant" value={cardData.print_variant} onChange={(e) => setCardData({ ...cardData, print_variant: e.target.value })} />
+                  <input className='col-sm-6 col-md-3 p05' type="text" placeholder="Stamp" value={cardData.stamp} onChange={(e) => setCardData({ ...cardData, stamp: e.target.value })} />
                 </div>
               </fieldset>
 
               {/* Pokémon Stats */}
               <fieldset style={{ padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
                 <legend><strong>Pokémon Stats</strong></legend>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
-                  <input type="text" placeholder="Primary Type (type_1)" value={cardData.type_1} onChange={(e) => setCardData({ ...cardData, type_1: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Secondary Type (type_2)" value={cardData.type_2} onChange={(e) => setCardData({ ...cardData, type_2: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="number" placeholder="HP" value={cardData.hp} onChange={(e) => setCardData({ ...cardData, hp: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Evolves From" value={cardData.evolves_from} onChange={(e) => setCardData({ ...cardData, evolves_from: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="number" placeholder="National Dex Number" value={cardData.pokemon_number} onChange={(e) => setCardData({ ...cardData, pokemon_number: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Category (e.g. Mouse)" value={cardData.pokemon_category} onChange={(e) => setCardData({ ...cardData, pokemon_category: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Height" value={cardData.height} onChange={(e) => setCardData({ ...cardData, height: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Weight" value={cardData.weight} onChange={(e) => setCardData({ ...cardData, weight: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Retreat Cost" value={cardData.retreat_cost} onChange={(e) => setCardData({ ...cardData, retreat_cost: e.target.value })} style={{ padding: '0.4rem' }} />
+                <div className='row'>
+                  <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Primary Type (type_1)" value={cardData.type_1} onChange={(e) => setCardData({ ...cardData, type_1: e.target.value })} />
+                  <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Secondary Type (type_2)" value={cardData.type_2} onChange={(e) => setCardData({ ...cardData, type_2: e.target.value })} />
+                  <input className='col-sm-6 col-md-4 p05' type="number" placeholder="HP" value={cardData.hp} onChange={(e) => setCardData({ ...cardData, hp: e.target.value })} />
+                  <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Evolves From" value={cardData.evolves_from} onChange={(e) => setCardData({ ...cardData, evolves_from: e.target.value })} />
+                  <input className='col-sm-6 col-md-4 p05' type="number" placeholder="National Dex Number" value={cardData.pokemon_number} onChange={(e) => setCardData({ ...cardData, pokemon_number: e.target.value })} />
+                  <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Category (e.g. Mouse)" value={cardData.pokemon_category} onChange={(e) => setCardData({ ...cardData, pokemon_category: e.target.value })} />
+                  <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Height" value={cardData.height} onChange={(e) => setCardData({ ...cardData, height: e.target.value })} />
+                  <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Weight" value={cardData.weight} onChange={(e) => setCardData({ ...cardData, weight: e.target.value })} />
+                  <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Retreat Cost" value={cardData.retreat_cost} onChange={(e) => setCardData({ ...cardData, retreat_cost: e.target.value })} />
                 </div>
               </fieldset>
 
               {/* Combat Modifiers */}
               <fieldset style={{ padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
                 <legend><strong>Combat Modifiers</strong></legend>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.5rem' }}>
-                  <input type="text" placeholder="Weakness Type" value={cardData.weakness_type} onChange={(e) => setCardData({ ...cardData, weakness_type: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Weakness Modifier (e.g. x2)" value={cardData.weakness_modifier} onChange={(e) => setCardData({ ...cardData, weakness_modifier: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Resistance Type" value={cardData.resistance_type} onChange={(e) => setCardData({ ...cardData, resistance_type: e.target.value })} style={{ padding: '0.4rem' }} />
-                  <input type="text" placeholder="Resistance Modifier (e.g. -30)" value={cardData.resistance_modifier} onChange={(e) => setCardData({ ...cardData, resistance_modifier: e.target.value })} style={{ padding: '0.4rem' }} />
+                <div className='row'>
+                  <input className='col-sm-6 col-md-3 p05' type="text" placeholder="Weakness Type" value={cardData.weakness_type} onChange={(e) => setCardData({ ...cardData, weakness_type: e.target.value })} />
+                  <input className='col-sm-6 col-md-3 p05' type="text" placeholder="Weakness Modifier (e.g. x2)" value={cardData.weakness_modifier} onChange={(e) => setCardData({ ...cardData, weakness_modifier: e.target.value })} />
+                  <input className='col-sm-6 col-md-3 p05' type="text" placeholder="Resistance Type" value={cardData.resistance_type} onChange={(e) => setCardData({ ...cardData, resistance_type: e.target.value })} />
+                  <input className='col-sm-6 col-md-3 p05' type="text" placeholder="Resistance Modifier (e.g. -30)" value={cardData.resistance_modifier} onChange={(e) => setCardData({ ...cardData, resistance_modifier: e.target.value })} />
                 </div>
               </fieldset>
 
@@ -425,47 +428,51 @@ export default function Update() {
               <fieldset style={{ padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
                 <legend><strong>Abilities</strong></legend>
                 {cardData.abilities.map((ability, index) => (
-                  <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.75rem', padding: '0.5rem', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <input type="text" placeholder="Ability Name" value={ability.name} onChange={(e) => handleAbilityChange(index, 'name', e.target.value)} style={{ flex: 1, padding: '0.3rem' }} />
-                      <input type="text" placeholder="Ability Type" value={ability.type} onChange={(e) => handleAbilityChange(index, 'type', e.target.value)} style={{ flex: 1, padding: '0.3rem' }} />
-                      <button type="button" onClick={() => handleRemoveAbility(index)} style={{ color: 'red' }}>✕</button>
+                  <div key={index} className='row'>
+                    <div className='col-sm-12'>
+                      <div className='row'>
+                      <input className='col-sm-6 p05' type="text" placeholder="Ability Name" value={ability.name} onChange={(e) => handleAbilityChange(index, 'name', e.target.value)} />
+                      <input className='col-sm-5 p05' type="text" placeholder="Ability Type" value={ability.type} onChange={(e) => handleAbilityChange(index, 'type', e.target.value)} />
+                      <button className='btn border col-sm-1 p05 font-white bg-flag-red' type="button" onClick={() => handleRemoveAbility(index)}>✕</button>
+                      </div>
                     </div>
-                    <textarea placeholder="Ability Description" value={ability.description} onChange={(e) => handleAbilityChange(index, 'description', e.target.value)} style={{ padding: '0.3rem', height: '50px' }} />
+                    <textarea className='col-sm-12 mb05 p05' placeholder="Ability Description" value={ability.description} onChange={(e) => handleAbilityChange(index, 'description', e.target.value)} />
                   </div>
                 ))}
-                <button type="button" onClick={handleAddAbility}>+ Add Ability</button>
+                <button className='btn border' type="button" onClick={handleAddAbility}>Add Ability <i className="fa-solid fa-plus"></i></button>
               </fieldset>
 
               {/* Dynamic Attacks Section */}
               <fieldset style={{ padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
                 <legend><strong>Attacks</strong></legend>
                 {cardData.attacks.map((attack, index) => (
-                  <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.75rem', padding: '0.5rem', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <input type="text" placeholder="Attack Name" value={attack.name} onChange={(e) => handleAttackChange(index, 'name', e.target.value)} style={{ flex: 2, padding: '0.3rem' }} />
-                      <input type="text" placeholder="Cost" value={attack.cost} onChange={(e) => handleAttackChange(index, 'cost', e.target.value)} style={{ flex: 2, padding: '0.3rem' }} />
-                      <input type="number" placeholder="Energy Count" value={attack.converted_energy_cost} onChange={(e) => handleAttackChange(index, 'converted_energy_cost', e.target.value)} style={{ flex: 1, padding: '0.3rem' }} />
-                      <input type="text" placeholder="Damage" value={attack.damage} onChange={(e) => handleAttackChange(index, 'damage', e.target.value)} style={{ flex: 1, padding: '0.3rem' }} />
-                      <button type="button" onClick={() => handleRemoveAttack(index)} style={{ color: 'red' }}>✕</button>
+                  <div key={index} className='row'>
+                    <div className='col-sm-12'>
+                      <div className='row'>
+                      <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Attack Name" value={attack.name} onChange={(e) => handleAttackChange(index, 'name', e.target.value)} />
+                      <input className='col-sm-6 col-md-4 p05' type="text" placeholder="Cost" value={attack.cost} onChange={(e) => handleAttackChange(index, 'cost', e.target.value)} />
+                      <input className='col-sm-6 col-md-1 p05' type="number" placeholder="Energy Count" value={attack.converted_energy_cost} onChange={(e) => handleAttackChange(index, 'converted_energy_cost', e.target.value)} />
+                      <input className='col-sm-5 col-md-2 p05' type="text" placeholder="Damage" value={attack.damage} onChange={(e) => handleAttackChange(index, 'damage', e.target.value)} />
+                      <button className='btn border col-sm-1 col-md-1 p05 font-white bg-flag-red' type="button" onClick={() => handleRemoveAttack(index)}>✕</button>
+                      </div>
                     </div>
-                    <textarea placeholder="Attack Description" value={attack.description} onChange={(e) => handleAttackChange(index, 'description', e.target.value)} style={{ padding: '0.3rem', height: '50px' }} />
+                    <textarea className='col-sm-12 mb05 p05' placeholder="Attack Description" value={attack.description} onChange={(e) => handleAttackChange(index, 'description', e.target.value)} />
                   </div>
                 ))}
-                <button type="button" onClick={handleAddAttack}>+ Add Attack</button>
+                <button className='btn border' type="button" onClick={handleAddAttack}>Add Attack <i className="fa-solid fa-plus"></i></button>
               </fieldset>
 
               {/* Text & Lore */}
               <fieldset style={{ padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
                 <legend><strong>Text & Lore</strong></legend>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <textarea placeholder="Pokedex Entry" value={cardData.dex_entry} onChange={(e) => setCardData({ ...cardData, dex_entry: e.target.value })} style={{ padding: '0.4rem', height: '60px' }} />
-                  <input type="text" placeholder="Copyright Text" value={cardData.copyright_text} onChange={(e) => setCardData({ ...cardData, copyright_text: e.target.value })} style={{ padding: '0.4rem' }} />
+                <div className='row'>
+                  <textarea className='col-sm-12 p05' placeholder="Pokedex Entry" value={cardData.dex_entry} onChange={(e) => setCardData({ ...cardData, dex_entry: e.target.value })} />
+                  <input className='col-sm-12 p05' type="text" placeholder="Copyright Text" value={cardData.copyright_text} onChange={(e) => setCardData({ ...cardData, copyright_text: e.target.value })} />
                 </div>
               </fieldset>
 
-              <button type="submit" disabled={loading} style={{ padding: '0.75rem', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '1rem', cursor: 'pointer' }}>
-                {loading ? 'Inserting Card into Database...' : 'Save Card & Proceed to Image Upload →'}
+              <button className='btn bg-medium-jungle font-white p1' type="submit" disabled={loading} >
+                {loading ? 'Inserting Card into Database...' : <>Save Card & Proceed to Image Upload <i className="fa-solid fa-right-long"></i></> }
               </button>
             </form>
           )}
@@ -475,7 +482,7 @@ export default function Update() {
       {/* STEP 3: IMAGE UPLOAD */}
       {step === 3 && (
         <div>
-          <button onClick={() => setStep(2)} style={{ marginBottom: '1rem' }}>← Back to Card Details</button>
+          <button className='btn border' onClick={() => setStep(2)} style={{ marginBottom: '1rem' }}><i class="fa-solid fa-left-long"></i> Back to Card Details</button>
           <h3>Step 3: Card Image Upload</h3>
           <p>Attaching image for Card ID: <strong>{activeCardId}</strong></p>
 
@@ -489,8 +496,8 @@ export default function Update() {
               </div>
             )}
 
-            <button type="submit" disabled={loading || !selectedFile} style={{ padding: '0.75rem', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '1rem', cursor: 'pointer' }}>
-              {loading ? 'Uploading Image...' : 'Upload Image & Complete Workflow'}
+            <button className='btn bg-blue-green font-white p05' type="submit" disabled={loading || !selectedFile} >
+              {loading ? 'Uploading Image...' : 'Upload Image & Complete Card Entry'}
             </button>
           </form>
         </div>

@@ -8,6 +8,7 @@ const app = express();
 
 const cors = require('cors');
 const allowedOrigins = [
+    "http://192.168.1.20",
     "http://localhost:5173",
     "http://localhost:3000",
     "http://localhost:8000",
@@ -15,18 +16,20 @@ const allowedOrigins = [
     "https://healer.remeil.co.nz",
     "https://remeil.co.nz"
 ];
-app.use(cors({
-    origin: function (origin, callback) {
-        // allow requests with no origin (like curl, Postman)
-        if (!origin) return callback(null, true); //change to !origin for production
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        } else {
-            return callback(new Error("Not allowed by CORS"));
-        }
-    },
-    credentials: true   // if you want cookies / sessions
-}));
+app.use(cors(
+    // {
+    // origin: function (origin, callback) {
+    //     // allow requests with no origin (like curl, Postman)
+    //     if (origin) return callback(null, true); //change to !origin for production
+    //     if (allowedOrigins.includes(origin)) {
+    //         return callback(null, true);
+    //     } else {
+    //         return callback(new Error("Not allowed by CORS"));
+    //     }
+    // },
+    // credentials: true   // if you want cookies / sessions
+    // }
+));
 
 // Parse JSON bodies (builtin to Express 4.16+)
 app.use(express.json());
@@ -89,7 +92,7 @@ app.get('/cards', (req, res) => {
         const totalItems = countResult.total;
         const totalPages = Math.ceil(totalItems / limit);
 
-        // 3. Paginate UNIQUE card IDs first, then JOIN child tables
+// 3. Paginate UNIQUE card IDs first, then JOIN child tables
         const dataSql = `
         WITH paginated_cards AS (
             SELECT pc.id
@@ -97,6 +100,15 @@ app.get('/cards', (req, res) => {
             ${whereClause}
             ORDER BY pc.set_id ASC, pc.set_number ASC
             LIMIT ? OFFSET ?
+        ),
+        ranked_prices AS (
+            SELECT 
+                card_id,
+                price_cents,
+                recorded_at,
+                LAG(price_cents) OVER (PARTITION BY card_id ORDER BY datetime(recorded_at) ASC) AS previous_price_cents,
+                ROW_NUMBER() OVER (PARTITION BY card_id ORDER BY datetime(recorded_at) DESC) AS rn
+            FROM card_market_price
         )
         SELECT
         pc.*,
@@ -120,6 +132,7 @@ app.get('/cards', (req, res) => {
         cat.damage,
         cat.description AS atack_description,
         cmp.price_cents,
+        cmp.previous_price_cents,
         cmp.recorded_at
         FROM paginated_cards p
         JOIN pokemon_card pc ON p.id = pc.id
@@ -127,7 +140,7 @@ app.get('/cards', (req, res) => {
         LEFT JOIN pokemon_set cs ON pc.set_id = cs.id
         LEFT JOIN card_ability cab ON pc.id = cab.card_id
         LEFT JOIN card_attack cat ON pc.id = cat.card_id
-        LEFT JOIN card_market_price cmp ON pc.id = cmp.card_id
+        LEFT JOIN ranked_prices cmp ON pc.id = cmp.card_id AND cmp.rn = 1
         ORDER BY pc.set_id ASC, pc.set_number ASC;
         `;
 
@@ -499,6 +512,93 @@ app.post('/cards/image', upload.single('image'), (req, res) => {
         card_id: parseInt(card_id, 10),
         location
       }
+    });
+  });
+});
+
+/* POST /cards/market */
+app.post('/cards/market', (req, res) => {
+  const { card_id, price_cents, source } = req.body;
+
+  // Validation
+  if (!card_id || price_cents == null) {
+    return res.status(400).json({ 
+      error: 'card_id and price_cents are required.' 
+    });
+  }
+
+  const parsedCardId = parseInt(card_id, 10);
+  const parsedPriceCents = parseInt(price_cents, 10);
+  const priceSource = source ? source.trim() : 'Manual Entry';
+
+  if (isNaN(parsedCardId) || isNaN(parsedPriceCents)) {
+    return res.status(400).json({ 
+      error: 'card_id and price_cents must be valid integers.' 
+    });
+  }
+
+  const sql = `
+    INSERT INTO card_market_price (card_id, price_cents, source, recorded_at) 
+    VALUES (?, ?, ?, datetime('now'))
+  `;
+
+  db.run(sql, [parsedCardId, parsedPriceCents, priceSource], function (err) {
+    if (err) {
+      return res.status(500).json({ error: 'Database insertion error: ' + err.message });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: this.lastID,
+        card_id: parsedCardId,
+        price_cents: parsedPriceCents,
+        source: priceSource,
+        recorded_at: new Date().toISOString()
+      }
+    });
+  });
+});
+
+/* GET /cards/:card_id/history */
+app.get('/cards/:card_id/history', (req, res) => {
+  const { card_id } = req.params;
+
+  const parsedCardId = parseInt(card_id, 10);
+  if (isNaN(parsedCardId)) {
+    return res.status(400).json({ error: 'Invalid card ID' });
+  }
+
+  const sql = `
+    SELECT 
+      id, 
+      price_cents, 
+      source, 
+      recorded_at 
+    FROM card_market_price 
+    WHERE card_id = ? 
+    ORDER BY datetime(recorded_at) ASC
+  `;
+
+  db.all(sql, [parsedCardId], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database query error: ' + err.message });
+    }
+
+    // Format fields for frontend usability
+    const formattedData = rows.map((row) => ({
+      id: row.id,
+      price: (row.price_cents / 100).toFixed(2),
+      priceNumeric: row.price_cents / 100,
+      source: row.source,
+      date: new Date(row.recorded_at).toLocaleDateString(),
+      recorded_at: row.recorded_at
+    }));
+
+    res.json({
+      success: true,
+      card_id: parsedCardId,
+      data: formattedData
     });
   });
 });

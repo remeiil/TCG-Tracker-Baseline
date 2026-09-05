@@ -7,6 +7,7 @@ export default function Menu() {
               <ul className='list-style-none link-style-none'>
                 <li><a href="/"><i className="fa-solid fa-house"></i> Home</a></li>
                 <li><a href="/update"><i className="fa-solid fa-database"></i> Update Database</a></li>
+                <li><a href="/market"><i className="fa-solid fa-chart-line"></i> Add Current Price</a></li>
                 <hr className='m05' />
                 <h4>My Account</h4>
                 <li><i className="fa-solid fa-right-to-bracket"></i> Login</li>
