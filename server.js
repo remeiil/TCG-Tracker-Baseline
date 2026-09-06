@@ -666,6 +666,10 @@ app.get('/inventory', verifyToken, (req, res) => {
       uci.acquired_at,
       uci.notes,
       pc.*,
+      COALESCE(
+        (SELECT price_cents FROM card_market_price WHERE card_id = pc.id ORDER BY recorded_at DESC LIMIT 1),
+        0
+      ) AS price_cents,
       ci.location,
       cs.name AS set_name,
       cs.era,
@@ -716,6 +720,26 @@ app.delete('/inventory/:id', verifyToken, (req, res) => {
     }
 
     res.json({ success: true, message: 'Card removed from inventory' });
+  });
+});
+
+// GET /cards/:cardId/owned-count
+app.get('/cards/:cardId/owned-count', verifyToken, (req, res) => {
+  const userId = req.user.id;
+  const cardId = req.params.cardId;
+
+  const sql = `
+    SELECT COALESCE(SUM(quantity), 0) AS owned_count
+    FROM user_card_inventory
+    WHERE user_id = ? AND card_id = ?
+  `;
+
+  db.get(sql, [userId, cardId], (err, row) => {
+    if (err) {
+      console.error('SQL Error fetching owned count:', err.message);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+    res.json({ success: true, owned_count: row ? row.owned_count : 0 });
   });
 });
 

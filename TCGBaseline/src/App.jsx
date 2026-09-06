@@ -8,6 +8,7 @@ import Market from './components/MarketPriceUpdate';
 import Login from './components/Login';
 import MyCards from './components/MyCards';
 import ProtectedRoute from './components/ProtectedRoute';
+import ContainerManager from './components/ContainerManager';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
         
         {/* Protected Routes Group */}
         <Route path='/my-cards' element={<MyCards />} />
+        <Route path='/manage-containers' element={<ContainerManager />} />
 
         {/* Admin-Only Routes */}
         <Route element={<ProtectedRoute requiredPermission="Admin - TCGBaseline" />}>

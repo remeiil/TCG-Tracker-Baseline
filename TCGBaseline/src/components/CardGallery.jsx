@@ -4,11 +4,14 @@ import CardPriceDisplay from './CardPriceDisplay';
 import { useAuth } from './AuthContext';
 import AddToCollectionModal from './AddToCollectionModal';
 
+const API_BASE_URL = `http://192.168.1.20:3000`;
+
 export default function CardGallery() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [ownedCount, setOwnedCount] = useState(0);
   const [cardToCollect, setCardToCollect] = useState(null);
   const { token } = useAuth();
 
@@ -36,7 +39,7 @@ export default function CardGallery() {
           queryParams.append('name', debouncedSearchTerm);
         }
 
-        const url = `http://192.168.1.20:3000/cards?${queryParams.toString()}`;
+        const url = `${API_BASE_URL}/cards?${queryParams.toString()}`;
         const response = await fetch(url);
         
         if (!response.ok) {
@@ -54,6 +57,30 @@ export default function CardGallery() {
 
     fetchCards();
   }, [debouncedSearchTerm]);
+
+  // Fetch owned count whenever a card is opened in the modal
+  useEffect(() => {
+    async function fetchOwnedCount() {
+      if (!selectedCard || !token) {
+        setOwnedCount(0);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/cards/${selectedCard.id}/owned-count`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.success) {
+          setOwnedCount(data.owned_count);
+        }
+      } catch (err) {
+        console.error('Error fetching owned count:', err);
+      }
+    }
+
+    fetchOwnedCount();
+  }, [selectedCard, token]);
 
   // 3. Handle Mobile Back Button for Modal
   useEffect(() => {
@@ -134,6 +161,7 @@ export default function CardGallery() {
               </div>
               <div className="justify-between">
                 <CardPriceDisplay card={card} formatPrice={formatPrice} />
+
                 {/* Quick Add Button on Hover / Mobile */}
                 {token && (
                   <button
@@ -200,6 +228,15 @@ export default function CardGallery() {
                 {selectedCard.rarity} - {selectedCard.set_number}
               </p>
               <CardPriceDisplay card={selectedCard} formatPrice={formatPrice} />
+              {/* Display owned count badge if logged in */}
+              {token && (
+                <p className="mt05" style={{ fontSize: '0.9rem' }}>
+                  <strong>In Collection:</strong>{' '}
+                  <span className={`br025 bold ${ownedCount > 0 ? 'font-medium-jungle' : 'font-sage'}`}>
+                    {ownedCount} {ownedCount === 1 ? 'copy' : 'copies'} owned
+                  </span>
+                </p>
+              )}
               <p className="font-sage" style={{ fontStyle: 'italic' }}>
                 {selectedCard.recorded_at != null
                   ? `Last tracked: ${selectedCard.recorded_at}`
