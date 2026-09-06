@@ -10,21 +10,21 @@
 }
 
 /* --- Row 1 --- */
-.type-icon.Fighting  { background-position: -55px -40px; }
-.type-icon.Colorless { background-position: -180px -40px; }
-.type-icon.Psychic   { background-position: -300px -40px; }
-.type-icon.Water     { background-position: -425px -40px; }
+.type-icon.fighting  { background-position: -55px -40px; }
+.type-icon.colorless { background-position: -180px -40px; }
+.type-icon.psychic   { background-position: -300px -40px; }
+.type-icon.water     { background-position: -425px -40px; }
 
 /* --- Row 2 --- */
-.type-icon.Grass     { background-position: -115px -165px; }
-.type-icon.Fairy     { background-position: -240px -165px; }
-.type-icon.Fire      { background-position: -360px -165px; }
+.type-icon.grass     { background-position: -115px -165px; }
+.type-icon.fairy     { background-position: -240px -165px; }
+.type-icon.fire      { background-position: -360px -165px; }
 
 /* --- Row 3 --- */
-.type-icon.Electric { background-position: -55px -290px; }
-.type-icon.Dark  { background-position: -180px -290px; }
-.type-icon.Metal     { background-position: -300px -290px; }
-.type-icon.Dragon    { background-position: -425px -290px; }
+.type-icon.electric { background-position: -55px -290px; }
+.type-icon.dark  { background-position: -180px -290px; }
+.type-icon.metal     { background-position: -300px -290px; }
+.type-icon.dragon    { background-position: -425px -290px; }
 
 .type-icon.sm {
 	zoom: 0.15;
