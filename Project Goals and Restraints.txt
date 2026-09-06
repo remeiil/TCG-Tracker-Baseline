@@ -5,20 +5,20 @@ Create inventory system for tracking pokemon cards
 Bonus
 --------
 light and dark mode
-close button on modals that is always accessible
+✓ close button on modals that is always accessible
 
 
 Views
 ========
 Note, responsive design should end up considering both mobile and desktop views
 
-1. Mobile List
-2. Desktop List
-3. Mobile Single
-5. Desktop Single
-6. Login
-7. logout
-8. Card Input/Creation
+✓ 1. Mobile List
+✓ 2. Desktop List
+✓ 3. Mobile Single
+✓ 5. Desktop Single
+✓ 6. Login
+✓ 7. logout
+✓ 8. Card Input/Creation
 
 Bonus
 --------
@@ -26,33 +26,33 @@ Bonus
 10. Binder/Portfolio
 11. Total Owned/Master
 12. card edit
-13. set creation
+✓ 13. set creation
 14. set edit
 
 Authorisation
 ========
-talk to party auth system (Mage/Tank/Healer)
+✓ talk to party auth system (Mage/Tank/Healer)
 
 Database
 ========
-pokemon card
-pokemon set
-users
-users cards
+✓ pokemon card
+✓ pokemon set
+✓ users
+✓ users cards
 
 API
 ========
-All cards
+✓ All cards
 My cards / overall inventory of user / user_card_inventory table (JOIN on pokemon_card card_ability and card_attack tables)
-Search
-create card / INSERT INTO pokemon_card card_ability and card_attack tables
-login (healer/tank)
-logout (healer/tank)
+✓ Search
+✓ create card / INSERT INTO pokemon_card card_ability and card_attack tables
+✓ login (healer/tank)
+✓ logout (healer/tank)
 
 Bonus
 --------
 edit card
-create set
+✓ create set
 edit set
 User / profile
 binder / user_collection_container table

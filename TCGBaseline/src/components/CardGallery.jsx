@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import CardPriceHistory from './CardPriceHistory';
 import CardPriceDisplay from './CardPriceDisplay';
+import { useAuth } from './AuthContext';
+import AddToCollectionModal from './AddToCollectionModal';
 
 export default function CardGallery() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [cardToCollect, setCardToCollect] = useState(null);
+  const { token } = useAuth();
 
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
@@ -120,14 +124,32 @@ export default function CardGallery() {
               onClick={() => setSelectedCard(card)}
             >
               <img className="br05" src={card.location} alt={card.name} width="100%" />
+
               <div className="justify-between">
                 <div id={`thumb${card.id}`}>
                   <h4>{card.name}</h4>
                   <p>{card.set_name}</p>
                   <p>{card.set_number}</p>
-                  <CardPriceDisplay card={card} formatPrice={formatPrice} />
                 </div>
               </div>
+              <div className="justify-between">
+                <CardPriceDisplay card={card} formatPrice={formatPrice} />
+                {/* Quick Add Button on Hover / Mobile */}
+                {token && (
+                  <button
+                    type="button"
+                    title="Add to Collection"
+                    className="btn bg-white border-sage font-medium-jungle"
+                    style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: 25, height: 25, borderRadius: 50, zIndex: 2 }}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevents opening the full detail modal
+                      setCardToCollect(card);
+                    }}
+                  >
+                    <i className="fa-solid fa-plus"></i>
+                  </button>
+                )}
+              </div>  
             </div>
           ))}
         </div>
@@ -183,6 +205,16 @@ export default function CardGallery() {
                   ? `Last tracked: ${selectedCard.recorded_at}`
                   : 'Not currently being tracked'}
               </p>
+              {/* add to collection button */}
+              {token && (
+                <button
+                  type="button"
+                  className="btn bg-white border-sage font-medium-jungle p05 br05 cursor-pointer"
+                  onClick={() => setCardToCollect(selectedCard)}
+                >
+                  <i className="fa-solid fa-plus mr025"></i> Add to Collection
+                </button>
+              )}
 
               <h3>Card Particulars</h3>
               <p><strong>Card run:</strong> {selectedCard.run}</p>
@@ -201,13 +233,15 @@ export default function CardGallery() {
 
               {/* Abilities */}
               {selectedCard.abilities?.length > 0 && (
-                <p>
-                  <strong>
-                    {selectedCard.abilities[0].type}: {selectedCard.abilities[0].name}
-                  </strong>{' '}
-                  {selectedCard.abilities[0].description}
+                <>
+                  <p>
+                    <strong>
+                      {selectedCard.abilities[0].type}: {selectedCard.abilities[0].name}
+                    </strong>{' '}
+                    {selectedCard.abilities[0].description}
+                  </p>
                   <hr className='m05' />
-                </p>
+                </>
               )}
 
               {/* Attack 1 */}
@@ -309,6 +343,12 @@ export default function CardGallery() {
             </div>
           </div>
         </div>
+      )}
+      {cardToCollect && (
+        <AddToCollectionModal
+          card={cardToCollect}
+          onClose={() => setCardToCollect(null)}
+        />
       )}
     </div>
   );
