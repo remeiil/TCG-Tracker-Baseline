@@ -439,6 +439,60 @@ app.post('/cards', verifyToken, (req, res) => {
     });
 });
 
+// PUT /sets/:id
+app.put('/sets/:id', verifyToken, (req, res) => {
+  const setId = req.params.id;
+  const { name, era, total, complete_total, master_total, grandmaster_total, stamped_grandmaster_total, release_date } = req.body;
+
+  const sql = `
+    UPDATE pokemon_set 
+    SET name = ?, era = ?, total = ?, complete_total = ?, master_total = ?, 
+        grandmaster_total = ?, stamped_grandmaster_total = ?, release_date = ?
+    WHERE id = ?
+  `;
+
+  db.run(sql, [name, era, total, complete_total, master_total, grandmaster_total, stamped_grandmaster_total, release_date, setId], function(err) {
+    if (err) return res.status(500).json({ success: false, error: err.message });
+    res.json({ success: true, message: 'Set updated successfully' });
+  });
+});
+
+// PUT /cards/:id
+app.put('/cards/:id', verifyToken, (req, res) => {
+  const cardId = req.params.id;
+  const { name, set_id, hp, pokemon_number, rarity, illustrator, set_number, abilities, attacks } = req.body;
+
+  const sql = `
+    UPDATE pokemon_card 
+    SET name = ?, set_id = ?, hp = ?, pokemon_number = ?, rarity = ?, illustrator = ?, set_number = ?
+    WHERE id = ?
+  `;
+
+  db.run(sql, [name, set_id, hp, pokemon_number, rarity, illustrator, set_number, cardId], function(err) {
+    if (err) return res.status(500).json({ success: false, error: err.message });
+
+    // Replace abilities and attacks inside a transaction
+    db.serialize(() => {
+      db.run(`DELETE FROM card_ability WHERE card_id = ?`, [cardId]);
+      db.run(`DELETE FROM card_attack WHERE card_id = ?`, [cardId]);
+
+      if (abilities?.length) {
+        const abStmt = db.prepare(`INSERT INTO card_ability (card_id, name, type, description) VALUES (?, ?, ?, ?)`);
+        abilities.forEach(a => abStmt.run(cardId, a.name, a.type, a.description));
+        abStmt.finalize();
+      }
+
+      if (attacks?.length) {
+        const atkStmt = db.prepare(`INSERT INTO card_attack (card_id, name, cost, converted_energy_cost, damage, description) VALUES (?, ?, ?, ?, ?, ?)`);
+        attacks.forEach(a => atkStmt.run(cardId, a.name, a.cost, a.converted_energy_cost, a.damage, a.description));
+        atkStmt.finalize();
+      }
+
+      res.json({ success: true, message: 'Card updated successfully' });
+    });
+  });
+});
+
 app.get('/sets', (req, res) => {
     const sql = `
         SELECT 
@@ -491,29 +545,32 @@ const upload = multer({ storage });
  */
 app.post('/cards/image', verifyToken, upload.single('image'), (req, res) => {
   const { card_id } = req.body;
-
-  if (!card_id || !req.file) {
-    return res.status(400).json({ error: 'card_id and image file are required.' });
+  if (!req.file || !card_id) {
+    return res.status(400).json({ success: false, error: 'Card ID and image file are required.' });
   }
 
-  // Construct URL path saved in database
-  const location = `img/${req.file.filename}`;
+  // Construct saved file path
+  const imageLocation = `/uploads/${req.file.filename}`;
 
-  const sql = `INSERT INTO card_image (card_id, location) VALUES (?, ?)`;
+  // Check if image already exists for this card
+  db.get(`SELECT id FROM card_image WHERE card_id = ?`, [card_id], (err, row) => {
+    if (err) return res.status(500).json({ success: false, error: err.message });
 
-  db.run(sql, [card_id, location], function (err) {
-    if (err) {
-      return res.status(500).json({ error: 'Database insertion error: ' + err.message });
+    if (row) {
+      // Overwrite/Update existing image path
+      const updateSql = `UPDATE card_image SET location = ? WHERE card_id = ?`;
+      db.run(updateSql, [imageLocation, card_id], function(updateErr) {
+        if (updateErr) return res.status(500).json({ success: false, error: updateErr.message });
+        res.json({ success: true, location: imageLocation, message: 'Card image updated successfully!' });
+      });
+    } else {
+      // Insert new image record
+      const insertSql = `INSERT INTO card_image (card_id, location) VALUES (?, ?)`;
+      db.run(insertSql, [card_id, imageLocation], function(insertErr) {
+        if (insertErr) return res.status(500).json({ success: false, error: insertErr.message });
+        res.json({ success: true, location: imageLocation, message: 'Card image uploaded successfully!' });
+      });
     }
-
-    res.json({
-      success: true,
-      data: {
-        id: this.lastID,
-        card_id: parseInt(card_id, 10),
-        location
-      }
-    });
   });
 });
 

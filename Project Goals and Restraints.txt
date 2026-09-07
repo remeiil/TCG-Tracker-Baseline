@@ -25,9 +25,9 @@ Bonus
 9. sign-up
 ✓ 10. Binder/Portfolio
 11. Total Owned/Master
-12. card edit
+✓12. card edit
 ✓ 13. set creation
-14. set edit
+✓ 14. set edit
 
 Authorisation
 ========
@@ -51,9 +51,9 @@ API
 
 Bonus
 --------
-edit card
+✓ edit card
 ✓ create set
-edit set
+✓ edit set
 User / profile
 ✓ binder / user_collection_container table
 
