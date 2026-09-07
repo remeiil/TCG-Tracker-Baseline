@@ -25,7 +25,7 @@ export default function Menu() {
           {token ? (<LogoutButton />) : (<li><Link to="/login"><i className="fa-solid fa-right-to-bracket"></i> Login</Link></li>)}
           {/* <li><i className="fa-solid fa-user-plus"></i> Register</li> */}
           {token && ( <li><Link to="/my-cards"><i className="fa-solid fa-box-archive"></i> My Cards</Link></li> )}
-          {token && ( <li><Link to="/manage-containers"><i className="fa-solid fa-book-open"></i> Manage Containers</Link></li> )}
+          {token && ( <li><Link to="/containers"><i className="fa-solid fa-book-open"></i> Manage Containers</Link></li> )}
         </ul>
       </div>
     </div>

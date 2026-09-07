@@ -33,7 +33,7 @@ function App() {
         
         {/* Protected Routes Group */}
         <Route path='/my-cards' element={<MyCards />} />
-        <Route path='/manage-containers' element={<ContainerManager />} />
+        <Route path='/containers' element={<ContainerManager />} />
 
         {/* Admin-Only Routes */}
         <Route element={<ProtectedRoute requiredPermission="Admin - TCGBaseline" />}>

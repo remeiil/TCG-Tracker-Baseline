@@ -23,7 +23,7 @@ Note, responsive design should end up considering both mobile and desktop views
 Bonus
 --------
 9. sign-up
-10. Binder/Portfolio
+✓ 10. Binder/Portfolio
 11. Total Owned/Master
 12. card edit
 ✓ 13. set creation

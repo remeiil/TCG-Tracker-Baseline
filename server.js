@@ -561,6 +561,52 @@ app.post('/cards/market', (req, res) => {
   });
 });
 
+// GET /cards/:id
+app.get('/cards/:id', (req, res) => {
+  const cardId = req.params.id;
+
+  const sql = `
+    SELECT 
+      pc.*,
+      cs.name AS set_name,
+      cs.era,
+      ci.location,
+      COALESCE(
+        (SELECT price_cents FROM card_market_price WHERE card_id = pc.id ORDER BY recorded_at DESC LIMIT 1),
+        0
+      ) AS price_cents
+    FROM pokemon_card pc
+    LEFT JOIN pokemon_set cs ON pc.set_id = cs.id
+    LEFT JOIN card_image ci ON pc.id = ci.card_id
+    WHERE pc.id = ?
+  `;
+
+  db.get(sql, [cardId], (err, cardRow) => {
+    if (err) {
+      console.error('Error fetching single card:', err.message);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+
+    if (!cardRow) {
+      return res.status(404).json({ success: false, error: 'Card not found' });
+    }
+
+    // Fetch associated abilities and attacks
+    db.all(`SELECT * FROM card_ability WHERE card_id = ?`, [cardId], (err, abilities) => {
+      db.all(`SELECT * FROM card_attack WHERE card_id = ?`, [cardId], (err, attacks) => {
+        res.json({
+          success: true,
+          data: {
+            ...cardRow,
+            abilities: abilities || [],
+            attacks: attacks || []
+          }
+        });
+      });
+    });
+  });
+});
+
 /* GET /cards/:card_id/history */
 app.get('/cards/:card_id/history', (req, res) => {
   const { card_id } = req.params;
@@ -797,6 +843,123 @@ app.post('/containers/:id/items', verifyToken, (req, res) => {
   db.run(sql, [containerId, inventory_id, quantity || 1], function(err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ success: true });
+  });
+});
+
+// GET /containers/details
+app.get('/containers/details', verifyToken, (req, res) => {
+  const userId = req.user.id;
+
+  const sql = `
+    SELECT 
+      ucc.id AS container_id,
+      ucc.name AS container_name,
+      ucc.description AS container_description,
+      ucc.created_at AS container_created_at,
+      cii.quantity_in_container,
+      uci.id AS inventory_id,
+      uci.condition,
+      pc.id AS card_id,
+      pc.name AS card_name,
+      pc.set_number,
+      cs.name AS set_name,
+      ci.location AS image_url
+    FROM user_collection_container ucc
+    LEFT JOIN container_inventory_item cii ON ucc.id = cii.container_id
+    LEFT JOIN user_card_inventory uci ON cii.inventory_id = uci.id
+    LEFT JOIN pokemon_card pc ON uci.card_id = pc.id
+    LEFT JOIN pokemon_set cs ON pc.set_id = cs.id
+    LEFT JOIN card_image ci ON pc.id = ci.card_id
+    WHERE ucc.user_id = ?
+    ORDER BY ucc.created_at DESC, pc.name ASC
+  `;
+
+  db.all(sql, [userId], (err, rows) => {
+    if (err) {
+      console.error('SQL Error in GET /containers/details:', err.message);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+
+    // Group items under their respective container
+    const containersMap = {};
+
+    rows.forEach((row) => {
+      if (!containersMap[row.container_id]) {
+        containersMap[row.container_id] = {
+          id: row.container_id,
+          name: row.container_name,
+          description: row.container_description,
+          created_at: row.container_created_at,
+          total_cards: 0,
+          items: []
+        };
+      }
+
+      if (row.inventory_id) {
+        containersMap[row.container_id].total_cards += row.quantity_in_container;
+        containersMap[row.container_id].items.push({
+          inventory_id: row.inventory_id,
+          card_id: row.card_id,
+          name: row.card_name,
+          set_name: row.set_name,
+          set_number: row.set_number,
+          condition: row.condition,
+          quantity: row.quantity_in_container,
+          image_url: row.image_url
+        });
+      }
+    });
+
+    res.json({ success: true, data: Object.values(containersMap) });
+  });
+});
+
+// DELETE /containers/:id
+app.delete('/containers/:id', verifyToken, (req, res) => {
+  const containerId = req.params.id;
+  const userId = req.user.id;
+
+  // Enforce ownership check
+  const sql = `DELETE FROM user_collection_container WHERE id = ? AND user_id = ?`;
+
+  db.run(sql, [containerId, userId], function(err) {
+    if (err) {
+      console.error('SQL Error in DELETE /containers:', err.message);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+
+    if (this.changes === 0) {
+      return res.status(404).json({ success: false, error: 'Container not found or unauthorized' });
+    }
+
+    res.json({ success: true, message: 'Container removed successfully' });
+  });
+});
+
+// DELETE /containers/:containerId/items/:inventoryId
+app.delete('/containers/:containerId/items/:inventoryId', verifyToken, (req, res) => {
+  const { containerId, inventoryId } = req.params;
+  const userId = req.user.id;
+
+  // Enforce ownership: ensure container belongs to user
+  const sql = `
+    DELETE FROM container_inventory_item 
+    WHERE container_id = ? 
+      AND inventory_id = ?
+      AND container_id IN (SELECT id FROM user_collection_container WHERE user_id = ?)
+  `;
+
+  db.run(sql, [containerId, inventoryId, userId], function(err) {
+    if (err) {
+      console.error('SQL Error removing item from container:', err.message);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+
+    if (this.changes === 0) {
+      return res.status(404).json({ success: false, error: 'Item assignment not found or unauthorized' });
+    }
+
+    res.json({ success: true, message: 'Card unassigned from container' });
   });
 });
 
