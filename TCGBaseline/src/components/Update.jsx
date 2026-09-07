@@ -421,6 +421,15 @@ export default function Update() {
     setCardData({ ...cardData, attacks: cardData.attacks.filter((_, i) => i !== index) });
   };
 
+  if (!token) {
+  return (
+    <div style={{ maxWidth: '800px', margin: '2rem auto', textAlign: 'center' }}>
+      <h2>Access Denied</h2>
+      <p>Please log in with an authorized account to manage sets and cards.</p>
+    </div>
+  );
+}
+
   return (
     <div style={{ maxWidth: '800px', margin: '2rem auto', padding: '1.5rem', border: '1px solid #ccc', borderRadius: '8px', fontFamily: 'sans-serif' }}>
       <h2>Card Tracker Entry Manager</h2>
