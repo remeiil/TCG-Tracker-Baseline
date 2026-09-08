@@ -47,6 +47,7 @@ export default function MyCards() {
     try {
       const queryParams = new URLSearchParams();
       if (searchFilters.query) queryParams.append('search', searchFilters.query);
+      if (searchFilters.set_id) queryParams.append('set_id', searchFilters.set_id);
       if (searchFilters.rarity) queryParams.append('rarity', searchFilters.rarity);
       if (searchFilters.supertype) queryParams.append('supertype', searchFilters.supertype);
 

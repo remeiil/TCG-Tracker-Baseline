@@ -42,7 +42,7 @@ app.get('/', (req, res) => {
 
 // GET /cards
 app.get('/cards', (req, res) => {
-  const { name, search, rarity, supertype, illustrator } = req.query;
+  const { name, search, set_id, rarity, supertype, illustrator } = req.query;
   const searchTerm = search || name; // Supports global query or legacy 'name'
 
   let sql = `
@@ -61,6 +61,11 @@ app.get('/cards', (req, res) => {
   `;
 
   const params = [];
+
+  if (set_id) {
+    sql += ` AND pc.set_id = ?`;
+    params.push(set_id);
+  }
 
   // Global search block in GET /cards
   if (searchTerm) {
@@ -649,7 +654,7 @@ app.post('/inventory', verifyToken, (req, res) => {
 // GET /inventory
 app.get('/inventory', verifyToken, (req, res) => {
   const userId = req.user.id;
-  const { search, name, rarity, supertype } = req.query;
+  const { search, name, set_id, rarity, supertype } = req.query;
   const searchTerm = search || name;
 
   let sql = `
@@ -683,6 +688,11 @@ app.get('/inventory', verifyToken, (req, res) => {
   `;
 
   const params = [userId];
+
+  if (set_id) {
+    sql += ` AND pc.set_id = ?`;
+    params.push(set_id);
+  }
 
   // Global search across owned card attributes + set name
   if (searchTerm) {

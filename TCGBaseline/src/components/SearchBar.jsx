@@ -1,8 +1,10 @@
 // SearchBar.jsx
 import React, { useState, useEffect } from 'react';
 
+const API_BASE_URL = `http://${window.location.hostname}:3000`;
+
 export default function SearchBar({ 
-  placeholder = "Search by card name, illustrator, rarity, HP, or Pokédex #...", 
+  placeholder = "Search by card name, set, illustrator, rarity...", 
   onSearch, 
   debounceMs = 300 
 }) {
@@ -10,22 +12,44 @@ export default function SearchBar({
   const [showFilters, setShowFilters] = useState(false);
   const [rarity, setRarity] = useState('');
   const [supertype, setSupertype] = useState('');
+  
+  // Set Filter State
+  const [sets, setSets] = useState([]);
+  const [selectedSetId, setSelectedSetId] = useState('');
 
+  // 1. Fetch available sets on mount
+  useEffect(() => {
+    async function fetchSets() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/sets`);
+        const json = await res.json();
+        if (json.success) {
+          setSets(json.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to load sets for search filter:', err);
+      }
+    }
+    fetchSets();
+  }, []);
+
+  // 2. Debounce and notify parent of all filter selections
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Pass both global term and column filters back to parent
       onSearch({
         query: searchTerm.trim(),
+        set_id: selectedSetId,
         rarity,
         supertype
       });
     }, debounceMs);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, rarity, supertype, debounceMs, onSearch]);
+  }, [searchTerm, selectedSetId, rarity, supertype, debounceMs, onSearch]);
 
   const handleClear = () => {
     setSearchTerm('');
+    setSelectedSetId('');
     setRarity('');
     setSupertype('');
   };
@@ -43,7 +67,7 @@ export default function SearchBar({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            {searchTerm && (
+            {(searchTerm || selectedSetId || rarity || supertype) && (
               <button
                 type="button"
                 className="btn font-sage cursor-pointer"
@@ -57,7 +81,7 @@ export default function SearchBar({
                   fontSize: '1rem'
                 }}
                 onClick={handleClear}
-                title="Clear Search"
+                title="Clear Search & Filters"
               >
                 ✕
               </button>
@@ -76,10 +100,29 @@ export default function SearchBar({
           </div>
         </div>
 
-        {/* Dynamic Column Filters Panel */}
+        {/* Filter Panel */}
         {showFilters && (
           <div className="row mt05 pt05 border-top">
-            <div className="col-sm-6 p025">
+            {/* Set Dropdown */}
+            <div className="col-sm-4 p025">
+              <label className="bold block font-sage" style={{ fontSize: '0.8rem' }}>Expansion Set</label>
+              <select
+                className="p05 br025 border-sage"
+                style={{ width: '100%' }}
+                value={selectedSetId}
+                onChange={(e) => setSelectedSetId(e.target.value)}
+              >
+                <option value="">All Sets</option>
+                {sets.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} {s.era ? `(${s.era})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Supertype Dropdown */}
+            <div className="col-sm-4 p025">
               <label className="bold block font-sage" style={{ fontSize: '0.8rem' }}>Supertype</label>
               <select
                 className="p05 br025 border-sage"
@@ -94,13 +137,14 @@ export default function SearchBar({
               </select>
             </div>
 
-            <div className="col-sm-6 p025">
+            {/* Rarity Field */}
+            <div className="col-sm-4 p025">
               <label className="bold block font-sage" style={{ fontSize: '0.8rem' }}>Rarity</label>
               <input
                 type="text"
                 className="p05 br025 border-sage"
                 style={{ width: '100%' }}
-                placeholder="e.g. Illustration Rare, Holo Rare"
+                placeholder="e.g. Illustration Rare"
                 value={rarity}
                 onChange={(e) => setRarity(e.target.value)}
               />
