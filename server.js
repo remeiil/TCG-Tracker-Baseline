@@ -62,10 +62,11 @@ app.get('/cards', (req, res) => {
 
   const params = [];
 
-  // Global search across ALL card attributes
+  // Global search block in GET /cards
   if (searchTerm) {
     sql += ` AND (
       pc.name LIKE ? OR 
+      cs.name LIKE ? OR 
       pc.supertype LIKE ? OR 
       pc.subtypes LIKE ? OR 
       pc.rarity LIKE ? OR 
@@ -76,13 +77,13 @@ app.get('/cards', (req, res) => {
       pc.hp = ? OR
       pc.pokemon_number = ?
     )`;
-    
+
     const wildcard = `%${searchTerm}%`;
     const numericTerm = parseInt(searchTerm, 10) || -1;
 
     params.push(
       wildcard, wildcard, wildcard, wildcard, wildcard, 
-      wildcard, wildcard, wildcard, numericTerm, numericTerm
+      wildcard, wildcard, wildcard, wildcard, numericTerm, numericTerm
     );
   }
 
@@ -649,7 +650,7 @@ app.post('/inventory', verifyToken, (req, res) => {
 app.get('/inventory', verifyToken, (req, res) => {
   const userId = req.user.id;
   const { search, name, rarity, supertype } = req.query;
-  const searchTerm = search || name; // Supports global query or legacy 'name' parameter
+  const searchTerm = search || name;
 
   let sql = `
     SELECT 
@@ -683,10 +684,11 @@ app.get('/inventory', verifyToken, (req, res) => {
 
   const params = [userId];
 
-  // Global search across owned card attributes
+  // Global search across owned card attributes + set name
   if (searchTerm) {
     sql += ` AND (
       pc.name LIKE ? OR 
+      cs.name LIKE ? OR 
       pc.supertype LIKE ? OR 
       pc.subtypes LIKE ? OR 
       pc.rarity LIKE ? OR 
@@ -704,7 +706,8 @@ app.get('/inventory', verifyToken, (req, res) => {
 
     params.push(
       wildcard, wildcard, wildcard, wildcard, wildcard, 
-      wildcard, wildcard, wildcard, wildcard, numericTerm, numericTerm
+      wildcard, wildcard, wildcard, wildcard, wildcard, 
+      numericTerm, numericTerm
     );
   }
 
