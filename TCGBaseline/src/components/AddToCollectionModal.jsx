@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
-const API_BASE_URL = `http://192.168.1.20:3000`;
+const API_BASE_URL = `http://localhost:3000`;
 
 export default function AddToCollectionModal({ card, onClose }) {
   const [quantity, setQuantity] = useState(1);
