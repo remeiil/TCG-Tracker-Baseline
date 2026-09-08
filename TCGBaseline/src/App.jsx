@@ -9,6 +9,7 @@ import Login from './components/Login';
 import MyCards from './components/MyCards';
 import ProtectedRoute from './components/ProtectedRoute';
 import ContainerManager from './components/ContainerManager';
+import MyProfile from './components/MyProfile';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         
         {/* Protected Routes Group */}
+        <Route path='/my-profile' element={<MyProfile />} />
         <Route path='/my-cards' element={<MyCards />} />
         <Route path='/containers' element={<ContainerManager />} />
 
