@@ -1020,6 +1020,64 @@ app.delete('/containers/:containerId/items/:inventoryId', verifyToken, (req, res
   });
 });
 
+// Profile info from TCG and Party Auth System
+// GET /api/my-profile
+app.get('/api/my-profile', verifyToken, async (req, res) => {
+  const userId = req.user.id;
+
+  // 1. Fetch exact fields from TCGBaseline local users table
+  const localSql = `SELECT id, external_auth_id, username, name, created FROM users WHERE id = ?`;
+
+  db.get(localSql, [userId], async (err, localUser) => {
+    if (err) {
+      console.error('SQL Error in local users table:', err.message);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+
+    if (!localUser) {
+      return res.status(404).json({ success: false, error: 'User not found in TCGBaseline database' });
+    }
+
+    // 2. Query remote tank /me endpoint
+    let remoteData = {};
+    try {
+      const authHeader = req.headers.authorization;
+      const remoteRes = await fetch('https://tank.remeil.co.nz/me', {
+        headers: {
+          'Authorization': authHeader || ''
+        }
+      });
+
+      if (remoteRes.ok) {
+        remoteData = await remoteRes.json();
+      } else {
+        console.warn(`Tank auth endpoint returned status ${remoteRes.status}`);
+      }
+    } catch (remoteErr) {
+      console.warn('Could not connect to external Tank Auth system:', remoteErr.message);
+    }
+
+    // 3. Merge strategy: Local TCGBaseline fields take priority.
+    // Attach fields from remoteData that are non-duplicative/new.
+    const extraRemoteData = {};
+
+    Object.keys(remoteData).forEach((key) => {
+      // Ignore keys that already exist locally or map to local equivalents
+      if (!(key in localUser)) {
+        extraRemoteData[key] = remoteData[key];
+      }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        ...localUser,
+        remote_extras: extraRemoteData
+      }
+    });
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
