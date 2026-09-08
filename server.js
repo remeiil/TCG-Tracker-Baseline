@@ -40,182 +40,72 @@ app.get('/', (req, res) => {
     res.send('Baseline up and ready to show you your cards!');
 });
 
-// Authentication routes will go here
-
-/**
- * GET /cards
- * Query Params:
- *   - page: page number (default: 1)
- *   - limit: items per page (default: 20, max: 100)
- */
-
-// Supported query parameters: name, set_id, rarity, type, page, limit
+// GET /cards
 app.get('/cards', (req, res) => {
-    // 1. Extract and sanitize query parameters
-    const { name, set_id, rarity, type } = req.query;
-    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-    let limit = parseInt(req.query.limit, 10) || 20;
-    if (limit > 100) limit = 100;
+  const { name, search, rarity, supertype, illustrator } = req.query;
+  const searchTerm = search || name; // Supports global query or legacy 'name'
 
-    const offset = (page - 1) * limit;
+  let sql = `
+    SELECT 
+      pc.*,
+      cs.name AS set_name,
+      ci.location,
+      COALESCE(
+        (SELECT price_cents FROM card_market_price WHERE card_id = pc.id ORDER BY recorded_at DESC LIMIT 1),
+        0
+      ) AS price_cents
+    FROM pokemon_card pc
+    LEFT JOIN pokemon_set cs ON pc.set_id = cs.id
+    LEFT JOIN card_image ci ON pc.id = ci.card_id
+    WHERE 1=1
+  `;
 
-    // Build dynamic SQL WHERE clause (prefix columns with pc. to avoid ambiguity)
-    const conditions = [];
-    const params = [];
+  const params = [];
 
-    if (name) {
-        conditions.push(`pc.name LIKE ?`);
-        params.push(`%${name}%`);
-    }
-    if (set_id) {
-        conditions.push(`pc.set_id = ?`);
-        params.push(set_id);
-    }
-    if (rarity) {
-        conditions.push(`pc.rarity = ?`);
-        params.push(rarity);
-    }
-    if (type) {
-        conditions.push(`(pc.type_1 = ? OR pc.type_2 = ?)`);
-        params.push(type, type);
-    }
+  // Global search across ALL card attributes
+  if (searchTerm) {
+    sql += ` AND (
+      pc.name LIKE ? OR 
+      pc.supertype LIKE ? OR 
+      pc.subtypes LIKE ? OR 
+      pc.rarity LIKE ? OR 
+      pc.illustrator LIKE ? OR 
+      pc.set_number LIKE ? OR 
+      pc.dex_entry LIKE ? OR 
+      pc.pokemon_category LIKE ? OR
+      pc.hp = ? OR
+      pc.pokemon_number = ?
+    )`;
+    
+    const wildcard = `%${searchTerm}%`;
+    const numericTerm = parseInt(searchTerm, 10) || -1;
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    params.push(
+      wildcard, wildcard, wildcard, wildcard, wildcard, 
+      wildcard, wildcard, wildcard, numericTerm, numericTerm
+    );
+  }
 
-    // 2. Count UNIQUE cards for accurate pagination
-    const countSql = `SELECT COUNT(DISTINCT pc.id) AS total FROM pokemon_card pc ${whereClause}`;
+  // Targeted Filters
+  if (rarity) {
+    sql += ` AND pc.rarity LIKE ?`;
+    params.push(`%${rarity}%`);
+  }
+  if (supertype) {
+    sql += ` AND pc.supertype LIKE ?`;
+    params.push(`%${supertype}%`);
+  }
+  if (illustrator) {
+    sql += ` AND pc.illustrator LIKE ?`;
+    params.push(`%${illustrator}%`);
+  }
 
-    db.get(countSql, params, (err, countResult) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database error counting cards: ' + err.message });
-        }
+  sql += ` ORDER BY cs.id DESC, pc.set_number ASC LIMIT 100`;
 
-        const totalItems = countResult.total;
-        const totalPages = Math.ceil(totalItems / limit);
-
-// 3. Paginate UNIQUE card IDs first, then JOIN child tables
-        const dataSql = `
-        WITH paginated_cards AS (
-            SELECT pc.id
-            FROM pokemon_card pc
-            ${whereClause}
-            ORDER BY pc.set_id ASC, pc.set_number ASC
-            LIMIT ? OFFSET ?
-        ),
-        ranked_prices AS (
-            SELECT 
-                card_id,
-                price_cents,
-                recorded_at,
-                LAG(price_cents) OVER (PARTITION BY card_id ORDER BY datetime(recorded_at) ASC) AS previous_price_cents,
-                ROW_NUMBER() OVER (PARTITION BY card_id ORDER BY datetime(recorded_at) DESC) AS rn
-            FROM card_market_price
-        )
-        SELECT
-        pc.*,
-        ci.location,
-        cs.name AS set_name,
-        cs.era,
-        cs.total AS set_total,
-        cs.complete_total,
-        cs.master_total,
-        cs.grandmaster_total,
-        cs.stamped_grandmaster_total,
-        cs.release_date,
-        cab.id AS ability_id,
-        cab.name AS ability_name,
-        cab.type AS ability_type,
-        cab.description AS ability_description,
-        cat.id AS attack_id,
-        cat.name AS atack_name,
-        cat.cost AS atack_cost,
-        cat.converted_energy_cost,
-        cat.damage,
-        cat.description AS atack_description,
-        cmp.price_cents,
-        cmp.previous_price_cents,
-        cmp.recorded_at
-        FROM paginated_cards p
-        JOIN pokemon_card pc ON p.id = pc.id
-        LEFT JOIN card_image ci ON pc.id = ci.card_id
-        LEFT JOIN pokemon_set cs ON pc.set_id = cs.id
-        LEFT JOIN card_ability cab ON pc.id = cab.card_id
-        LEFT JOIN card_attack cat ON pc.id = cat.card_id
-        LEFT JOIN ranked_prices cmp ON pc.id = cmp.card_id AND cmp.rn = 1
-        ORDER BY pc.set_id ASC, pc.set_number ASC;
-        `;
-
-        const queryParams = [...params, limit, offset];
-
-        db.all(dataSql, queryParams, (err, rows) => {
-            if (err) {
-                return res.status(500).json({ error: 'Database error fetching cards: ' + err.message });
-            }
-
-            // 4. Group row duplicates into a single card object with an attacks array
-            const cardsMap = new Map();
-
-            rows.forEach(row => {
-                if (!cardsMap.has(row.id)) {
-                    // Extract base card fields
-                    const {
-                        ability_id, ability_name, ability_type, ability_description,
-                        attack_id, atack_name, atack_cost, converted_energy_cost, damage, atack_description,
-                        ...cardData
-                    } = row;
-
-                    cardsMap.set(row.id, {
-                        ...cardData,
-                        abilities: [],
-                        attacks: []
-                    });
-                }
-
-                const card = cardsMap.get(row.id);
-
-                // Add attack if present and not already added
-                if (row.attack_id && !card.attacks.some(a => a.id === row.attack_id)) {
-                    card.attacks.push({
-                        id: row.attack_id,
-                        name: row.atack_name,
-                        cost: row.atack_cost,
-                        converted_energy_cost: row.converted_energy_cost,
-                        damage: row.damage,
-                        description: row.atack_description
-                    });
-                }
-
-                // Add ability if present and not already added
-                if (row.ability_id && !card.abilities.some(a => a.id === row.ability_id)) {
-                    card.abilities.push({
-                        id: row.ability_id,
-                        name: row.ability_name,
-                        type: row.ability_type,
-                        description: row.ability_description
-                    });
-                }
-            });
-
-            res.json({
-                success: true,
-                pagination: {
-                    totalItems,
-                    totalPages,
-                    currentPage: page,
-                    pageSize: limit,
-                    hasNextPage: page < totalPages,
-                    hasPrevPage: page > 1
-                },
-                filtersApplied: {
-                    name: name || null,
-                    set_id: set_id ? parseInt(set_id, 10) : null,
-                     rarity: rarity || null,
-                     type: type || null
-                },
-                data: Array.from(cardsMap.values())
-            });
-        });
-    });
+  db.all(sql, params, (err, rows) => {
+    if (err) return res.status(500).json({ success: false, error: err.message });
+    res.json({ success: true, data: rows });
+  });
 });
 
 /**
@@ -755,9 +645,11 @@ app.post('/inventory', verifyToken, (req, res) => {
 });
 
 // Fetch user's full inventory with card details
+// GET /inventory
 app.get('/inventory', verifyToken, (req, res) => {
   const userId = req.user.id;
-  const nameQuery = req.query.name ? `%${req.query.name}%` : null;
+  const { search, name, rarity, supertype } = req.query;
+  const searchTerm = search || name; // Supports global query or legacy 'name' parameter
 
   let sql = `
     SELECT 
@@ -765,41 +657,76 @@ app.get('/inventory', verifyToken, (req, res) => {
       uci.quantity,
       uci.condition,
       uci.purchase_price_cents,
-      uci.market_price_at_addition_cents,
       uci.acquired_at,
       uci.notes,
-      pc.*,
+      pc.id AS card_id,
+      pc.name,
+      pc.rarity,
+      pc.supertype,
+      pc.set_number,
+      pc.illustrator,
+      cs.name AS set_name,
+      ci.location,
+      c.name AS container_name,
       COALESCE(
         (SELECT price_cents FROM card_market_price WHERE card_id = pc.id ORDER BY recorded_at DESC LIMIT 1),
         0
-      ) AS price_cents,
-      ci.location,
-      cs.name AS set_name,
-      cs.era,
-      ucc.name AS container_name
+      ) AS price_cents
     FROM user_card_inventory uci
     JOIN pokemon_card pc ON uci.card_id = pc.id
     LEFT JOIN pokemon_set cs ON pc.set_id = cs.id
     LEFT JOIN card_image ci ON pc.id = ci.card_id
     LEFT JOIN container_inventory_item cii ON uci.id = cii.inventory_id
-    LEFT JOIN user_collection_container ucc ON cii.container_id = ucc.id
+    LEFT JOIN user_collection_container c ON cii.container_id = c.id
     WHERE uci.user_id = ?
   `;
 
   const params = [userId];
 
-  if (nameQuery) {
-    sql += ` AND pc.name LIKE ?`;
-    params.push(nameQuery);
+  // Global search across owned card attributes
+  if (searchTerm) {
+    sql += ` AND (
+      pc.name LIKE ? OR 
+      pc.supertype LIKE ? OR 
+      pc.subtypes LIKE ? OR 
+      pc.rarity LIKE ? OR 
+      pc.illustrator LIKE ? OR 
+      pc.set_number LIKE ? OR 
+      pc.dex_entry LIKE ? OR 
+      pc.pokemon_category LIKE ? OR
+      c.name LIKE ? OR
+      pc.hp = ? OR
+      pc.pokemon_number = ?
+    )`;
+
+    const wildcard = `%${searchTerm}%`;
+    const numericTerm = parseInt(searchTerm, 10) || -1;
+
+    params.push(
+      wildcard, wildcard, wildcard, wildcard, wildcard, 
+      wildcard, wildcard, wildcard, wildcard, numericTerm, numericTerm
+    );
   }
 
-  sql += ` ORDER BY uci.acquired_at DESC`;
+  // Column-specific filters
+  if (rarity) {
+    sql += ` AND pc.rarity LIKE ?`;
+    params.push(`%${rarity}%`);
+  }
+
+  if (supertype) {
+    sql += ` AND pc.supertype LIKE ?`;
+    params.push(`%${supertype}%`);
+  }
+
+  sql += ` ORDER BY uci.id DESC`;
 
   db.all(sql, params, (err, rows) => {
     if (err) {
       console.error('SQL Error in GET /inventory:', err.message);
       return res.status(500).json({ success: false, error: err.message });
     }
+
     res.json({ success: true, data: rows || [] });
   });
 });

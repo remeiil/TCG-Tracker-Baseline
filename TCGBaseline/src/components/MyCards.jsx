@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import CardPriceHistory from './CardPriceHistory';
 import CardPriceDisplay from './CardPriceDisplay';
 import { useAuth } from './AuthContext';
 import AddToCollectionModal from './AddToCollectionModal';
 import CardDetailModal from './CardDetailModal';
+import SearchBar from './SearchBar';
 
 const API_BASE_URL = `http://localhost:3000`;
 
@@ -13,13 +14,10 @@ export default function MyCards() {
   const [error, setError] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   const [cardToCollect, setCardToCollect] = useState(null);
-  const { token } = useAuth();
-
-  // Search state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-
   const [summary, setSummary] = useState({ total_cards_owned: 0, total_value_formatted: '0.00' });
+  const [searchFilters, setSearchFilters] = useState({ query: '', rarity: '', supertype: '' });
+  
+  const { token } = useAuth();
 
   // Load summary stats on token load
   useEffect(() => {
@@ -42,51 +40,48 @@ export default function MyCards() {
     }
   };
 
-  // 1. Debounce search input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300);
+  // Fetch user's inventory whenever searchFilters or token changes
+  const fetchInventory = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const queryParams = new URLSearchParams();
+      if (searchFilters.query) queryParams.append('search', searchFilters.query);
+      if (searchFilters.rarity) queryParams.append('rarity', searchFilters.rarity);
+      if (searchFilters.supertype) queryParams.append('supertype', searchFilters.supertype);
 
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // 2. Fetch user's inventory
-  useEffect(() => {
-    async function fetchInventory() {
-      setLoading(true);
-      setError(null);
-      try {
-        const queryParams = new URLSearchParams();
-        if (debouncedSearchTerm) {
-          queryParams.append('name', debouncedSearchTerm);
+      const res = await fetch(`${API_BASE_URL}/inventory?${queryParams.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-
-        const response = await fetch(`${API_BASE_URL}/inventory?${queryParams.toString()}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const responseData = await response.json();
-        setInventory(responseData.data || []);
-      } catch (err) {
-        console.error('Failed to fetch inventory:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! Status: ${res.status}`);
       }
+      
+      const json = await res.json();
+      setInventory(json.data || []);
+    } catch (err) {
+      console.error('Failed to fetch inventory:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
+  }, [searchFilters, token]);
 
+  useEffect(() => {
     if (token) {
       fetchInventory();
     }
-  }, [debouncedSearchTerm, token]);
+  }, [token, fetchInventory]);
 
-  // 3. Handle Mobile Back Button for Modal
+  // SearchBar Callback
+  const handleSearch = useCallback((filters) => {
+    setSearchFilters(filters);
+  }, []);
+
+  // Handle Mobile Back Button for Modal
   useEffect(() => {
     if (!selectedCard) return;
 
@@ -109,7 +104,7 @@ export default function MyCards() {
     }
   };
 
-  // 4. Handle Delete item from inventory
+  // Handle Delete item from inventory
   const handleDeleteInventoryItem = async (inventoryId) => {
     if (!window.confirm('Are you sure you want to remove this card from your collection?')) {
       return;
@@ -129,13 +124,9 @@ export default function MyCards() {
         throw new Error(data.error || 'Failed to delete card');
       }
 
-      // 1. Remove item from active UI inventory state
       setInventory((prev) => prev.filter((item) => item.inventory_id !== inventoryId));
-
-      // 2. Refresh top banner summary metrics
       fetchSummary();
 
-      // 3. If the modal for this card is currently open, close it
       if (selectedCard?.inventory_id === inventoryId) {
         handleCloseModal();
       }
@@ -159,8 +150,7 @@ export default function MyCards() {
               Total Cards Owned
             </span>
             <h2 className="m0 font-amber-flame" style={{ fontSize: '2rem' }}>
-              <i className="fa-solid fa-layer-group mr05"></i>
-              {summary.total_cards_owned}
+              <i className="fa-solid fa-layer-group mr05"></i> {summary.total_cards_owned}
             </h2>
           </div>
         </div>
@@ -171,26 +161,17 @@ export default function MyCards() {
               Estimated Market Value
             </span>
             <h2 className="m0 font-medium-jungle" style={{ fontSize: '2rem' }}>
-              <i className="fa-solid fa-sack-dollar mr05"></i>
-              ${summary.total_value_formatted}
+              <i className="fa-solid fa-sack-dollar mr05"></i> ${summary.total_value_formatted}
             </h2>
           </div>
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="row m-auto mb-1 p025" style={{ maxWidth: '1200px' }}>
-        <div className="col-12">
-          <input
-            type="text"
-            className="p05 br05 border-sage"
-            style={{ width: '100%', fontSize: '1rem' }}
-            placeholder="Search my owned cards by name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
+      {/* Reusable Search Component */}
+      <SearchBar 
+        placeholder="Search my owned cards by name, illustrator, rarity..." 
+        onSearch={handleSearch} 
+      />
 
       {/* Indicators */}
       {loading && <div className="text-center p1">Loading your collection...</div>}
@@ -199,8 +180,8 @@ export default function MyCards() {
       {/* Grid View */}
       {!loading && !error && inventory.length === 0 && (
         <div className="text-center p1">
-          {debouncedSearchTerm
-            ? `No owned cards matching "${debouncedSearchTerm}".`
+          {searchFilters.query || searchFilters.rarity || searchFilters.supertype
+            ? 'No owned cards matching your filter criteria.'
             : 'Your collection is currently empty.'}
         </div>
       )}
@@ -255,7 +236,6 @@ export default function MyCards() {
                 >
                   <i className="fa-solid fa-plus"></i>
                 </button>
-                {/* Quick Delete Button in Grid Card */}
                 <button
                   type="button"
                   title="Remove from collection"
@@ -292,7 +272,10 @@ export default function MyCards() {
         <AddToCollectionModal
           card={cardToCollect}
           onClose={() => setCardToCollect(null)}
-          onSuccess={() => fetchSummary()}
+          onSuccess={() => {
+            fetchSummary();
+            fetchInventory();
+          }}
         />
       )}
     </div>

@@ -3,7 +3,7 @@ import { useAuth } from './AuthContext';
 
 const API_BASE_URL = `http://localhost:3000`;
 
-export default function AddToCollectionModal({ card, onClose }) {
+export default function AddToCollectionModal({ card, onClose, onSuccess }) {
   const [quantity, setQuantity] = useState(1);
   const [condition, setCondition] = useState('Near Mint');
   const [dollars, setDollars] = useState('');
@@ -68,6 +68,11 @@ export default function AddToCollectionModal({ card, onClose }) {
             quantity: parseInt(quantity, 10)
           })
         });
+      }
+
+      // 3. Refresh collection total cards and market value banner
+      if (onSuccess) {
+        onSuccess();
       }
 
       setMessage({ type: 'success', text: `Added ${card.name} to collection!` });
