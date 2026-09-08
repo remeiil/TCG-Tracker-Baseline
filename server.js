@@ -1078,6 +1078,49 @@ app.get('/api/my-profile', verifyToken, async (req, res) => {
   });
 });
 
+// GET /inventory/summary
+app.get('/inventory/summary', verifyToken, (req, res) => {
+  const userId = req.user.id;
+
+  const sql = `
+    SELECT 
+      COALESCE(SUM(uci.quantity), 0) AS total_cards_owned,
+      COALESCE(
+        SUM(
+          uci.quantity * COALESCE(
+            (
+              SELECT price_cents 
+              FROM card_market_price 
+              WHERE card_id = uci.card_id 
+              ORDER BY recorded_at DESC 
+              LIMIT 1
+            ), 
+            0
+          )
+        ), 
+        0
+      ) AS total_value_cents
+    FROM user_card_inventory uci
+    WHERE uci.user_id = ?
+  `;
+
+  db.get(sql, [userId], (err, row) => {
+    if (err) {
+      console.error('SQL Error in GET /inventory/summary:', err.message);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        total_cards_owned: row.total_cards_owned,
+        total_value_cents: row.total_value_cents,
+        total_value_formatted: (row.total_value_cents / 100).toFixed(2)
+      }
+    });
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);

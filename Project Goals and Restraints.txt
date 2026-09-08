@@ -54,8 +54,14 @@ Bonus
 ✓ edit card
 ✓ create set
 ✓ edit set
-User / profile
+✓ User / profile
 ✓ binder / user_collection_container table
+
+Second Bonus (Scope creep)
+--------
+Change Password - this requires modifying both Tank and TCGBaseline and it would be worth modifying Healer
+Split search out into a reusable component
+Add filter to Search
 
 
 

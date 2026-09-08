@@ -23,7 +23,7 @@ export default function Menu() {
           <hr className='m05' />
           <h4>My Account</h4>
           {token ? (<LogoutButton />) : (<li><Link to="/login"><i className="fa-solid fa-right-to-bracket"></i> Login</Link></li>)}
-          {token && ( <li><Link to="/my-profile"><i class="fa-solid fa-user"></i> My Profile</Link> </li>)}
+          {token && ( <li><Link to="/my-profile"><i className="fa-solid fa-user"></i> My Profile</Link> </li>)}
           {/* <li><i className="fa-solid fa-user-plus"></i> Register</li> */}
           {token && ( <li><Link to="/my-cards"><i className="fa-solid fa-box-archive"></i> My Cards</Link></li> )}
           {token && ( <li><Link to="/containers"><i className="fa-solid fa-book-open"></i> Manage Containers</Link></li> )}

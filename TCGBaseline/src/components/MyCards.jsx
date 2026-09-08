@@ -1,4 +1,3 @@
-// MyCards.jsx
 import React, { useState, useEffect } from 'react';
 import CardPriceHistory from './CardPriceHistory';
 import CardPriceDisplay from './CardPriceDisplay';
@@ -19,6 +18,29 @@ export default function MyCards() {
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  const [summary, setSummary] = useState({ total_cards_owned: 0, total_value_formatted: '0.00' });
+
+  // Load summary stats on token load
+  useEffect(() => {
+    if (token) {
+      fetchSummary();
+    }
+  }, [token]);
+
+  const fetchSummary = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/inventory/summary`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSummary(json.data);
+      }
+    } catch (err) {
+      console.error('Failed to load collection summary:', err);
+    }
+  };
 
   // 1. Debounce search input
   useEffect(() => {
@@ -110,7 +132,10 @@ export default function MyCards() {
       // 1. Remove item from active UI inventory state
       setInventory((prev) => prev.filter((item) => item.inventory_id !== inventoryId));
 
-      // 2. If the modal for this card is currently open, close it
+      // 2. Refresh top banner summary metrics
+      fetchSummary();
+
+      // 3. If the modal for this card is currently open, close it
       if (selectedCard?.inventory_id === inventoryId) {
         handleCloseModal();
       }
@@ -126,6 +151,33 @@ export default function MyCards() {
 
   return (
     <div id="cards-container">
+      {/* Collection Summary Banner */}
+      <div className="row mb1 m-auto" style={{ maxWidth: '1200px' }}>
+        <div className="col-sm-6 p05">
+          <div className="border-sage br05 p1 bg-white text-center shadow-subtle">
+            <span className="font-sage bold block uppercase" style={{ fontSize: '0.85rem' }}>
+              Total Cards Owned
+            </span>
+            <h2 className="m0 font-amber-flame" style={{ fontSize: '2rem' }}>
+              <i className="fa-solid fa-layer-group mr05"></i>
+              {summary.total_cards_owned}
+            </h2>
+          </div>
+        </div>
+
+        <div className="col-sm-6 p05">
+          <div className="border-sage br05 p1 bg-white text-center shadow-subtle">
+            <span className="font-sage bold block uppercase" style={{ fontSize: '0.85rem' }}>
+              Estimated Market Value
+            </span>
+            <h2 className="m0 font-medium-jungle" style={{ fontSize: '2rem' }}>
+              <i className="fa-solid fa-sack-dollar mr05"></i>
+              ${summary.total_value_formatted}
+            </h2>
+          </div>
+        </div>
+      </div>
+
       {/* Search Bar */}
       <div className="row m-auto mb-1 p025" style={{ maxWidth: '1200px' }}>
         <div className="col-12">
@@ -217,7 +269,7 @@ export default function MyCards() {
                     borderRadius: 50
                   }}
                   onClick={(e) => {
-                    e.stopPropagation(); // Prevents opening modal
+                    e.stopPropagation();
                     handleDeleteInventoryItem(item.inventory_id);
                   }}
                 >
@@ -240,6 +292,7 @@ export default function MyCards() {
         <AddToCollectionModal
           card={cardToCollect}
           onClose={() => setCardToCollect(null)}
+          onSuccess={() => fetchSummary()}
         />
       )}
     </div>
