@@ -3,7 +3,7 @@
 	display: inline-block;
 	width: 115px;
 	height: 115px;
-	background-image: url('./img/pokemon_tcg_types.png');
+	background-image: url('/img/pokemon_tcg_types.png');
 	background-repeat: no-repeat;
 	background-size: 600px 450px; /* Force image scale so coordinate grid stays exact */
 	border-radius: 50%;           /* Optional: crops exact circle */
