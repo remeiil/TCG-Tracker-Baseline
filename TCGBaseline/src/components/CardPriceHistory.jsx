@@ -9,7 +9,7 @@ import {
   CartesianGrid
 } from 'recharts';
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://tcg-server.remeil.co.nz';
 
 export default function CardPriceHistory({ cardId, cardName }) {
   const [historyData, setHistoryData] = useState([]);

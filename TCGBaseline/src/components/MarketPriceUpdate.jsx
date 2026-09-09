@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://tcg-server.remeil.co.nz';
 
 export default function Market() {
   const [searchTerm, setSearchTerm] = useState('');

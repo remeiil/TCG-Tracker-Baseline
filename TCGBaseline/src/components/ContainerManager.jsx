@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import CardDetailModal from './CardDetailModal';
 
-const API_BASE_URL = `http://localhost:3000`;
+const API_BASE_URL = `https://tcg-server.remeil.co.nz`;
 
 export default function ContainerManager() {
   const [containers, setContainers] = useState([]);

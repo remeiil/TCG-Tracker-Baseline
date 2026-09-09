@@ -1,7 +1,7 @@
 // SearchBar.jsx
 import React, { useState, useEffect } from 'react';
 
-const API_BASE_URL = `http://${window.location.hostname}:3000`;
+const API_BASE_URL = `https://tcg-server.remeil.co.nz`;
 
 export default function SearchBar({ 
   placeholder = "Search by card name, set, illustrator, rarity...", 

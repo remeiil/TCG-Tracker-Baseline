@@ -11,7 +11,7 @@ const cors = require('cors');
 const allowedOrigins = [
     "http://192.168.1.20",
     "http://localhost:5173",
-    "http://localhost:3000",
+    "http://localhost:8008",
     "http://localhost:8000",
     "http://localhost:8002",
     "https://healer.remeil.co.nz",
@@ -1061,7 +1061,7 @@ app.get('/inventory/summary', verifyToken, (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8008;
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
 });

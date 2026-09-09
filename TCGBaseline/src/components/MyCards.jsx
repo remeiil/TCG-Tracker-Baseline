@@ -6,7 +6,7 @@ import AddToCollectionModal from './AddToCollectionModal';
 import CardDetailModal from './CardDetailModal';
 import SearchBar from './SearchBar';
 
-const API_BASE_URL = `http://localhost:3000`;
+const API_BASE_URL = `https://tcg-server.remeil.co.nz`;
 
 export default function MyCards() {
   const [inventory, setInventory] = useState([]);
